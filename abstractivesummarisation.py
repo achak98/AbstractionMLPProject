@@ -26,8 +26,6 @@ from transformers import (
 
 from tqdm.auto import tqdm
 
-!nvidia-smi
-
 # Commented out IPython magic to ensure Python compatibility.
 import seaborn as sns
 from pylab import rcParams
@@ -259,7 +257,7 @@ class NewsSummaryModel(pl.LightningModule):
 model = NewsSummaryModel()
 
 checkpoint_callback = ModelCheckpoint(
-    dirpath='/content/drive/MyDrive/CNN DailyMail Summarisation Data/checkpoints',
+    dirpath='/checkpoints',
     filename='best-checkpoint',
     save_top_k=1,
     verbose=True,
