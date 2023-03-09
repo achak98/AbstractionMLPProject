@@ -34,6 +34,7 @@ from matplotlib import rc
 # %matplotlib inline
 # %config InlineBackend.figure_format= 'retina'
 
+torch.cuda.empty_cache()
 MODEL_NAME = 't5-base'
 tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512)
     
