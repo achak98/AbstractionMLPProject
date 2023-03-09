@@ -35,7 +35,7 @@ from matplotlib import rc
 # %config InlineBackend.figure_format= 'retina'
 
 torch.cuda.empty_cache()
-MODEL_NAME = 't5-small'
+MODEL_NAME = 't5-base'
 tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512, truncation = True)
     
 class NewsSummaryDataset(Dataset):
