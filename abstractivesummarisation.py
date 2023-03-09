@@ -36,7 +36,7 @@ from matplotlib import rc
 
 torch.cuda.empty_cache()
 MODEL_NAME = 't5-small'
-tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512)
+tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512, truncation = True)
     
 class NewsSummaryDataset(Dataset):
     def __init__(
