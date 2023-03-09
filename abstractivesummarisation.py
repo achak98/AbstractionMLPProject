@@ -273,8 +273,7 @@ trainer = pl.Trainer(
     logger=logger,
     callbacks=[checkpoint_callback],
     max_epochs=N_EPOCHS,
-    accelerator='gpu',
-    devices=7
+    gpus = 7
 )
 
 trainer.fit(model, data_module)
