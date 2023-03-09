@@ -35,7 +35,8 @@ from matplotlib import rc
 # %config InlineBackend.figure_format= 'retina'
 
 MODEL_NAME = 't5-base'
-
+tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512)
+    
 class NewsSummaryDataset(Dataset):
     def __init__(
         self,
@@ -278,8 +279,6 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
     df_train_trimmed.head()
-
-    tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512)
     
     N_EPOCHS = 8
     BATCH_SIZE = 1
