@@ -33,28 +33,6 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 # %matplotlib inline
 # %config InlineBackend.figure_format= 'retina'
-sns.set(style='whitegrid', palette='muted', font_scale = 1.2)
-rcParams['figure.figsize'] = 16, 10
-
-pl.seed_everything(42)
-
-print("Is any cuda device available?",torch.cuda.is_available())
-print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
-
-test = "CNN DailyMail Summarisation Data/test.csv"
-train = "CNN DailyMail Summarisation Data/train.csv"
-validation = "CNN DailyMail Summarisation Data/validation.csv"
-
-df_train = pd.read_csv(train, encoding = "latin-1")
-#df_train = df_train[500:]
-df_test = pd.read_csv(test, encoding = "latin-1")
-df_validation = pd.read_csv(validation, encoding = "latin-1")
-df_train.head()
-
-df_train_trimmed = df_train[['article', 'highlights']]
-df_test_trimmed = df_test[['article', 'highlights']]
-df_validation_trimmed = df_validation[['article', 'highlights']]
-df_train_trimmed.head()
 
 class NewsSummaryDataset(Dataset):
     def __init__(
@@ -147,28 +125,24 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=2
+            num_workers=0
         )
 
     def test_dataloader(self):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=2
+            shuffle=False,
+            num_workers=0
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=2
+            shuffle=False,
+            num_workers=0
         )
-
-MODEL_NAME = 't5-base'
-
-tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512)
 
 #text_token_counts, summary_token_counts = [], []
 
@@ -186,10 +160,6 @@ tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512)
 #sns.histplot(text_token_counts, ax=ax1)
 #ax1.set_title('full text token counts')
 #sns.histplot(summary_token_counts, ax=ax2)
-
-N_EPOCHS = 8
-BATCH_SIZE = 4
-data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer)
 
 class NewsSummaryModel(pl.LightningModule):
     def __init__(self):
@@ -257,34 +227,6 @@ class NewsSummaryModel(pl.LightningModule):
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
 
-model = NewsSummaryModel()
-
-checkpoint_callback = ModelCheckpoint(
-    dirpath='/checkpoints',
-    filename='best-checkpoint',
-    save_top_k=1,
-    verbose=True,
-    monitor='val_loss',
-    mode='min'
-)
-
-logger = TensorBoardLogger("lightning_logs", name='news-summary')
-trainer = pl.Trainer(
-    logger=logger,
-    callbacks=[checkpoint_callback],
-    max_epochs=N_EPOCHS,
-    gpus = 7
-)
-
-trainer.fit(model, data_module)
-
-print("path: ",trainer.checkpoint_callback.best_model_path,":::")
-
-trained_model = NewsSummaryModel.load_from_checkpoint(
-    trainer.checkpoint_callback.best_model_path
-)
-trained_model.freeze()
-
 def summarizeText(text):
     text_encoding = tokenizer(
         text,
@@ -311,14 +253,77 @@ def summarizeText(text):
     ]
     return "".join(preds)
 
-sample_row = df_test_trimmed.iloc[0]
-text = sample_row['article']
-text
+def main():
+    sns.set(style='whitegrid', palette='muted', font_scale = 1.2)
+    rcParams['figure.figsize'] = 16, 10
 
-model_summary = summarizeText(text)
-model_summary
+    pl.seed_everything(42)
 
-val_dataloaders = NewsSummaryDataModule(df_validation_trimmed, tokenizer)
+    print("Is any cuda device available?",torch.cuda.is_available())
+    print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
 
-trainer.validate(model=model, dataloaders=val_dataloaders)
+    test = "CNN DailyMail Summarisation Data/test.csv"
+    train = "CNN DailyMail Summarisation Data/train.csv"
+    validation = "CNN DailyMail Summarisation Data/validation.csv"
 
+    df_train = pd.read_csv(train, encoding = "latin-1")
+    #df_train = df_train[500:]
+    df_test = pd.read_csv(test, encoding = "latin-1")
+    df_validation = pd.read_csv(validation, encoding = "latin-1")
+    df_train.head()
+
+    df_train_trimmed = df_train[['article', 'highlights']]
+    df_test_trimmed = df_test[['article', 'highlights']]
+    df_validation_trimmed = df_validation[['article', 'highlights']]
+    df_train_trimmed.head()
+    
+    MODEL_NAME = 't5-base'
+
+    tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512)
+    
+    N_EPOCHS = 8
+    BATCH_SIZE = 4
+    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer)
+
+    
+    model = NewsSummaryModel()
+
+    checkpoint_callback = ModelCheckpoint(
+        dirpath='/checkpoints',
+        filename='best-checkpoint',
+        save_top_k=1,
+        verbose=True,
+        monitor='val_loss',
+        mode='min'
+    )
+
+    logger = TensorBoardLogger("lightning_logs", name='news-summary')
+    trainer = pl.Trainer(
+        logger=logger,
+        callbacks=[checkpoint_callback],
+        max_epochs=N_EPOCHS,
+        gpus = 6
+    )
+
+    trainer.fit(model, data_module)
+
+    print("path: ",trainer.checkpoint_callback.best_model_path,":::")
+
+    trained_model = NewsSummaryModel.load_from_checkpoint(
+        trainer.checkpoint_callback.best_model_path
+    )
+    trained_model.freeze()
+    
+    sample_row = df_test_trimmed.iloc[0]
+    text = sample_row['article']
+    #print(text)
+
+    model_summary = summarizeText(text)
+    #print(model_summary)
+
+    val_dataloaders = NewsSummaryDataModule(df_validation_trimmed, tokenizer)
+
+    trainer.validate(model=model, dataloaders=val_dataloaders)
+
+if __name__ == "__main__":
+        main()
