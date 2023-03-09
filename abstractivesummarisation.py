@@ -38,6 +38,9 @@ rcParams['figure.figsize'] = 16, 10
 
 pl.seed_everything(42)
 
+print("Is any cuda device available?",torch.cuda.is_available())
+print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
+
 test = "CNN DailyMail Summarisation Data/test.csv"
 train = "CNN DailyMail Summarisation Data/train.csv"
 validation = "CNN DailyMail Summarisation Data/validation.csv"
@@ -185,7 +188,7 @@ tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512)
 #sns.histplot(summary_token_counts, ax=ax2)
 
 N_EPOCHS = 8
-BATCH_SIZE = 1
+BATCH_SIZE = 4
 data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer)
 
 class NewsSummaryModel(pl.LightningModule):
@@ -271,7 +274,7 @@ trainer = pl.Trainer(
     callbacks=[checkpoint_callback],
     max_epochs=N_EPOCHS,
     accelerator='gpu',
-    devices=8
+    devices=7
 )
 
 trainer.fit(model, data_module)

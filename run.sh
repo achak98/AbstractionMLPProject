@@ -1,14 +1,14 @@
 #!/bin/sh
 #SBATCH -N 1      # nodes requested
 #SBATCH -n 1      # tasks requested
-#SBATCH --partition=Teach-Standard
+#SBATCH --partition=Teach-LongJobs
 #SBATCH --gres=gpu:8
 #SBATCH --mem=12000  # memory in Mb
 #SBATCH --time=0-08:00:00
 
-export CUDA_HOME=/opt/cuda-11.4.1/
+export CUDA_HOME=/opt/cuda-11.2.0/
 
-export CUDNN_HOME=/opt/cuDNN-11.4-8.2.2.26/
+export CUDNN_HOME=/opt/cudnn-11.4-8.2.2.26/
 
 export STUDENT_ID=$(whoami)
 
@@ -31,7 +31,14 @@ export TMP=/disk/scratch/${STUDENT_ID}/
 # Activate the relevant virtual environment:
 
 
-source $HOME/miniconda3/bin/activate mlp
+source $HOME/miniconda3/bin/activate mlp2
 
+export LS=$(ls /opt/)
+
+echo $LS
+
+export NVIDIA_SMI=$(nvidia-smi)
+
+echo $NVIDIA_SMI
 
 python abstractivesummarisation.py
