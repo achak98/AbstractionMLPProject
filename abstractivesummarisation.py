@@ -35,7 +35,9 @@ from matplotlib import rc
 # %config InlineBackend.figure_format= 'retina'
 
 torch.cuda.empty_cache()
-MODEL_NAME = 't5-base'
+N_EPOCHS = 8
+BATCH_SIZE = 8
+MODEL_NAME = 't5-small'
 tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512, truncation = True, padding='max_length')
     
 class NewsSummaryDataset(Dataset):
@@ -281,10 +283,7 @@ def main():
     df_validation_trimmed = df_validation[['article', 'highlights']]
     df_train_trimmed.head()
     
-    N_EPOCHS = 8
-    BATCH_SIZE = 1
     data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer)
-
     
     model = NewsSummaryModel()
 
