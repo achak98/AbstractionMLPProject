@@ -195,7 +195,7 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels
         )
 
-        self.log("train_loss", loss, prog_bar=True, logger=True)
+        self.log("train_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
         return loss
     
     def validation_step(self, batch, batch_size):
@@ -211,7 +211,7 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels
         )
 
-        self.log("val_loss", loss, prog_bar=True, logger=True)
+        self.log("val_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
         return loss
 
     def test_step(self, batch, batch_size):
@@ -227,7 +227,7 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels
         )
 
-        self.log("test_loss", loss, prog_bar=True, logger=True)
+        self.log("test_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
         return loss
 
     def configure_optimizers(self):
