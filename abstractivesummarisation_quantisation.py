@@ -23,7 +23,7 @@ from transformers import (
     T5ForConditionalGeneration,
     T5TokenizerFast as T5Tokenizer,
     AutoModelForSeq2SeqLM,
-    AutoTok
+    AutoTokenizer
 )
 
 from tqdm.auto import tqdm
