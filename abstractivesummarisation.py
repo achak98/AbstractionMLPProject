@@ -22,6 +22,7 @@ from transformers import (
     AdamW,
     T5ForConditionalGeneration,
     T5TokenizerFast as T5Tokenizer
+    AutoTokenizer
 )
 
 from tqdm.auto import tqdm
@@ -39,7 +40,7 @@ N_EPOCHS = 8
 BATCH_SIZE = 8
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
-tokenizer = T5Tokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
+tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
     
 class NewsSummaryDataset(Dataset):
     def __init__(
