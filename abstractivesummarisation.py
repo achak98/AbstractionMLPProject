@@ -38,14 +38,15 @@ torch.cuda.empty_cache()
 N_EPOCHS = 8
 BATCH_SIZE = 8
 MODEL_NAME = 't5-small'
-tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, max_length=512, truncation = True, padding='max_length')
+FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
+tokenizer = T5Tokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
     
 class NewsSummaryDataset(Dataset):
     def __init__(
         self,
         data: pd.DataFrame,
         tokenizer: T5Tokenizer,
-        text_max_token_len: int = 512,
+        text_max_token_len: int = 1024,
         summary_max_token_len: int = 128
     ):
         self.tokenizer = tokenizer
@@ -100,7 +101,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         test_df: pd.DataFrame,
         tokenizer: T5Tokenizer,
         batch_size: int = 4,
-        text_max_token_len: int = 512,
+        text_max_token_len: int = 1024,
         summary_max_token_len: int = 256
     ):
         super().__init__()
@@ -170,7 +171,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
 class NewsSummaryModel(pl.LightningModule):
     def __init__(self):
         super().__init__()
-        self.model = T5ForConditionalGeneration.from_pretrained(MODEL_NAME, return_dict=True)
+        self.model = T5ForConditionalGeneration.from_pretrained(FT_MODEL_NAME, return_dict=True)
     
     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
         output = self.model(
@@ -239,7 +240,7 @@ class NewsSummaryModel(pl.LightningModule):
 def summarizeText(text):
     text_encoding = tokenizer(
         text,
-        max_length=512,
+        max_length=1024,
         padding='max_length',
         truncation=True,
         return_attention_mask=True,
