@@ -21,7 +21,9 @@ import textwrap
 from transformers import (
     AdamW,
     T5ForConditionalGeneration,
-    T5TokenizerFast as T5Tokenizer
+    T5TokenizerFast as T5Tokenizer,
+    AutoModelForSeq2SeqLM,
+    AutoTok
 )
 
 from tqdm.auto import tqdm
@@ -38,7 +40,7 @@ torch.cuda.empty_cache()
 N_EPOCHS = 8
 BATCH_SIZE = 8
 
-TOK_MAX_LENGTH = 512
+TOK_MAX_LENGTH = 1024
 
 MAX_LENGTH = 150
 LENGTH_PENALTY = 1.0
@@ -50,14 +52,14 @@ REPETITION_PENALTY = 2.5
 
 BASELINE_NAME = 't5-small'
 MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
-tokenizer = T5Tokenizer.from_pretrained(BASELINE_NAME, max_length=512, truncation = True, padding='max_length')
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
     
 class NewsSummaryDataset(Dataset):
     def __init__(
         self,
         data: pd.DataFrame,
-        tokenizer: T5Tokenizer,
-        text_max_token_len: int = 512,
+        tokenizer: AutoTokenizer,
+        text_max_token_len: int = 1024,
         summary_max_token_len: int = 128
     ):
         self.tokenizer = tokenizer
@@ -110,9 +112,9 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         self,
         train_df: pd.DataFrame,
         test_df: pd.DataFrame,
-        tokenizer: T5Tokenizer,
+        tokenizer: AutoTokenizer,
         batch_size: int = 4,
-        text_max_token_len: int = 512,
+        text_max_token_len: int = 1024,
         summary_max_token_len: int = 256
     ):
         super().__init__()
@@ -167,10 +169,8 @@ class NewsSummaryModel(pl.LightningModule):
         super().__init__()
         self.generate_kwargs = generate_kwargs
         self.tokenizer_kwargs = tokenizer_kwargs
-        self.model = T5ForConditionalGeneration.from_pretrained(BASELINE_NAME, 
-                                                                torch_dtype=torch.int8 if do_int8 else torch.float16,
-                                                                low_cpu_mem_usage=True if low_cpu_mem_usage else None,
-                                                                load_in_8bit=do_int8,
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME, 
+                                                                torch_dtype=torch.float16,
                                                                 return_dict=True)
     
     def configure_optimizers(self, lr=1e-3):
