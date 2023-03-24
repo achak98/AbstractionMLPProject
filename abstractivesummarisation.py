@@ -192,7 +192,8 @@ class NewsSummaryModel(pl.LightningModule):
             input_ids=input_ids,
             attention_mask=attention_mask,
             decoder_attention_mask=labels_attention_mask,
-            labels=labels
+            labels=labels,
+            batch_size=batch_size
         )
 
         self.log("train_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
@@ -208,7 +209,8 @@ class NewsSummaryModel(pl.LightningModule):
             input_ids=input_ids,
             attention_mask=attention_mask,
             decoder_attention_mask=labels_attention_mask,
-            labels=labels
+            labels=labels,
+            batch_size=batch_size
         )
 
         self.log("val_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
@@ -224,7 +226,8 @@ class NewsSummaryModel(pl.LightningModule):
             input_ids=input_ids,
             attention_mask=attention_mask,
             decoder_attention_mask=labels_attention_mask,
-            labels=labels
+            labels=labels,
+            batch_size=batch_size
         )
 
         self.log("test_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
