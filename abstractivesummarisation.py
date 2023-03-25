@@ -17,6 +17,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
 from termcolor import colored
 import textwrap
+import rouge
 
 from transformers import (
     AdamW,
@@ -264,6 +265,28 @@ def summarizeText(text):
     ]
     return "".join(preds)
 
+def get_rouge_scores (test_data):
+    rouge = Rouge()
+    ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
+    count = 0
+    for stuff in df_test_trimmed:
+        count+=1
+        text = stuff['article']
+        model_summary = summarizeText(text)
+        scores = rouge.get_scores(model_summary, stuff['highlights'])
+        ROUGE_SCORE_RUNNING_AVG[0][0] += (scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
+        ROUGE_SCORE_RUNNING_AVG[0][1] += (scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
+        ROUGE_SCORE_RUNNING_AVG[0][2] += (scores["rouge-1"]["r"] - ROUGE_SCORE_RUNNING_AVG[0][2])/count
+        ROUGE_SCORE_RUNNING_AVG[1][0] += (scores["rouge-2"]["f"] - ROUGE_SCORE_RUNNING_AVG[1][0])/count
+        ROUGE_SCORE_RUNNING_AVG[1][1] += (scores["rouge-2"]["p"] - ROUGE_SCORE_RUNNING_AVG[1][1])/count
+        ROUGE_SCORE_RUNNING_AVG[1][2] += (scores["rouge-2"]["r"] - ROUGE_SCORE_RUNNING_AVG[1][2])/count
+        ROUGE_SCORE_RUNNING_AVG[2][0] += (scores["rouge-l"]["f"] - ROUGE_SCORE_RUNNING_AVG[2][0])/count
+        ROUGE_SCORE_RUNNING_AVG[2][1] += (scores["rouge-l"]["p"] - ROUGE_SCORE_RUNNING_AVG[2][1])/count
+        ROUGE_SCORE_RUNNING_AVG[2][2] += (scores["rouge-l"]["r"] - ROUGE_SCORE_RUNNING_AVG[2][2])/count
+    print("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2]))
+    print("Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f}".format(f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2]))
+    print("Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
+
 def main():
     sns.set(style='whitegrid', palette='muted', font_scale = 1.2)
     rcParams['figure.figsize'] = 16, 10
@@ -329,5 +352,7 @@ def main():
 
     trainer.validate(model=model, dataloaders=val_dataloaders)
 
+    get_rouge_scores(df_test_trimmed)
+    
 if __name__ == "__main__":
         main()
