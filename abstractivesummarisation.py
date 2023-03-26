@@ -19,6 +19,7 @@ from termcolor import colored
 import textwrap
 import rouge
 from nltk.translate.bleu_score import sentence_bleu
+from gensim.parsing.preprocessing import remove_stopwords
 from transformers import (
     AdamW,
     T5ForConditionalGeneration,
@@ -297,29 +298,41 @@ def get_rouge_and_bleu_scores (test_data):
     print("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
     b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
 
+def remove_stopwords(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
+    print(df_test_trimmed.head())
+    for stuff in df_test_trimmed:
+        stuff['article'] =  remove_stopwords(stuff['article'])
+    print(df_test_trimmed.head())
+    for stuff in df_train_trimmed:
+        stuff['article'] =  remove_stopwords(stuff['article'])
+    for stuff in df_validation_trimmed:
+        stuff['article'] =  remove_stopwords(stuff['article'])
+        
 def main():
     sns.set(style='whitegrid', palette='muted', font_scale = 1.2)
     rcParams['figure.figsize'] = 16, 10
 
     pl.seed_everything(42)
 
-    print("Is any cuda device available?",torch.cuda.is_available())
-    print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
+    #print("Is any cuda device available?",torch.cuda.is_available())
+    #print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
 
     test = "CNN DailyMail Summarisation Data/test.csv"
     train = "CNN DailyMail Summarisation Data/train.csv"
     validation = "CNN DailyMail Summarisation Data/validation.csv"
 
     df_train = pd.read_csv(train, encoding = "latin-1")
-    #df_train = df_train[500:]
     df_test = pd.read_csv(test, encoding = "latin-1")
     df_validation = pd.read_csv(validation, encoding = "latin-1")
-    df_train.head()
+    #df_train.head()
 
     df_train_trimmed = df_train[['article', 'highlights']]
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
-    df_train_trimmed.head()
+    
+    #df_train_trimmed.head()
+    
+    remove_stopwords(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
     
     data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer)
     
