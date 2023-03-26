@@ -19,7 +19,7 @@ from termcolor import colored
 import textwrap
 import rouge
 from nltk.translate.bleu_score import sentence_bleu
-from gensim.parsing.preprocessing import remove_stopwords
+from gensim.parsing.preprocessing import remove_stopwords, preprocess_string, strip_multiple_whitespaces, stem_text, strip_non_alphanum
 from transformers import (
     AdamW,
     T5ForConditionalGeneration,
@@ -299,23 +299,56 @@ def get_rouge_and_bleu_scores (test_data):
     b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
 
 def remove_stopwords(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
-    print(df_test_trimmed.head())
-    for stuff in df_test_trimmed:
-        stuff['article'] =  remove_stopwords(stuff['article'])
-    print(df_test_trimmed.head())
-    for stuff in df_train_trimmed:
-        stuff['article'] =  remove_stopwords(stuff['article'])
-    for stuff in df_validation_trimmed:
-        stuff['article'] =  remove_stopwords(stuff['article'])
+   
+    for itr in range (0, len(df_test_trimmed)):
+        stuff = df_test_trimmed['article'].iloc[itr]
+        stuff =  remove_stopwords(stuff)
+        df_test_trimmed['article'].iloc[itr] = stuff
+    
+    for itr in range (0, len(df_train_trimmed)):
+        stuff = df_train_trimmed['article'].iloc[itr]
+        stuff =  remove_stopwords(stuff)
+        df_train_trimmed['article'].iloc[itr] = stuff
+     
+    for itr in range (0, len(df_validation_trimmed)):
+        stuff = df_validation_trimmed['article'].iloc[itr]
+        stuff =  remove_stopwords(stuff)
+        df_validation_trimmed['article'].iloc[itr] = stuff
+     
+
+def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem):
+    
+    if stem:
+        CUSTOM_FILTERS = [lambda x: x.lower(), strip_non_alphanum, strip_multiple_whitespaces, remove_stopwords, stem_text]
+    else:
+        CUSTOM_FILTERS = [lambda x: x.lower(), strip_non_alphanum, strip_multiple_whitespaces, remove_stopwords]
+    df_test_trimmed = df_test[['article', 'highlights']]
+
+    for itr in range (0, len(df_test_trimmed)):
+        stuff = df_test_trimmed['article'].iloc[itr]
+        stuff = preprocess_string(stuff , CUSTOM_FILTERS)
+        stuff = " ".join(stuff)
+        df_test_trimmed['article'].iloc[itr] = stuff
+    
+    for itr in range (0, len(df_train_trimmed)):
+        stuff = df_train_trimmed['article'].iloc[itr]
+        stuff = preprocess_string(stuff , CUSTOM_FILTERS)
+        stuff = " ".join(stuff)
+        df_train_trimmed['article'].iloc[itr] = stuff
         
+    for itr in range (0, len(df_validation_trimmed)):
+        stuff = df_validation_trimmed['article'].iloc[itr]
+        stuff = preprocess_string(stuff , CUSTOM_FILTERS)
+        stuff = " ".join(stuff)
+        df_validation_trimmed['article'].iloc[itr] = stuff
+    
+    
 def main():
-    sns.set(style='whitegrid', palette='muted', font_scale = 1.2)
-    rcParams['figure.figsize'] = 16, 10
 
     pl.seed_everything(42)
 
-    #print("Is any cuda device available?",torch.cuda.is_available())
-    #print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
+    print("Is any cuda device available?",torch.cuda.is_available())
+    print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
 
     test = "CNN DailyMail Summarisation Data/test.csv"
     train = "CNN DailyMail Summarisation Data/train.csv"
@@ -324,15 +357,15 @@ def main():
     df_train = pd.read_csv(train, encoding = "latin-1")
     df_test = pd.read_csv(test, encoding = "latin-1")
     df_validation = pd.read_csv(validation, encoding = "latin-1")
-    #df_train.head()
 
     df_train_trimmed = df_train[['article', 'highlights']]
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
     
-    #df_train_trimmed.head()
     
     remove_stopwords(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
+    #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
+    #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
     data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer)
     
@@ -363,13 +396,6 @@ def main():
         trainer.checkpoint_callback.best_model_path
     )
     trained_model.freeze()
-    
-    sample_row = df_test_trimmed.iloc[0]
-    text = sample_row['article']
-    #print(text)
-
-    model_summary = summarizeText(text)
-    #print(model_summary)
 
     val_dataloaders = NewsSummaryDataModule(df_validation_trimmed, tokenizer)
 
