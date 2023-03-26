@@ -188,6 +188,7 @@ class NewsSummaryModel(pl.LightningModule):
             attention_mask=attention_mask,
             labels=labels,
             decoder_attention_mask=decoder_attention_mask,
+            return_dict = True
         )
 
         return output.loss, output.logits
@@ -243,6 +244,54 @@ class NewsSummaryModel(pl.LightningModule):
         generated_ids = self.model.generate(input_ids=text_encoding['input_ids'], attention_mask=text_encoding['attention_mask'], **self.generate_kwargs)
 
         return "".join([tokenizer.decode(gen_id, skip_special_tokens=True, clean_up_tokenization_spaces=True) for gen_id in generated_ids])
+    
+    def generate_attention_map(self, text_input_ids, summary_input_ids):
+        # Set the model to evaluation mode
+        self.model.eval()
+
+        # Generate the output
+        output = self.model.generate(
+	        input_ids=text_input_ids,
+	        attention_mask=(text_input_ids != tokenizer.pad_token_id),
+	        **self.generate_kwargs
+	    )
+
+        # Get the attention scores from the last layer of the decoder
+        last_layer_attention = self.model.decoder.attention_weights[-1]
+
+        # Reshape the attention scores to match the output shape
+        last_layer_attention = last_layer_attention.view(
+	        output.size(0),
+	        self.model.config.num_heads,
+	        -1,
+	        output.size(-1)
+	    )
+
+        # Compute the attention scores for the summary tokens
+        summary_attention = last_layer_attention[:, :, -summary_input_ids.shape[1]:, :]
+
+        # Sum the attention scores across the heads and normalize them
+        summary_attention = summary_attention.sum(dim=1)
+        summary_attention /= summary_attention.sum(dim=-1, keepdim=True)
+	
+	    # Convert the attention scores to a numpy array
+        summary_attention = summary_attention.detach().cpu().numpy()
+	
+	    # Plot the heatmap
+        sns.set(style='whitegrid', font_scale=1.2)
+        rcParams['figure.figsize'] = 8, 4
+        rc('font', weight='bold')
+        ax = sns.heatmap(summary_attention[0], cmap='YlGnBu', annot=True, fmt='.2f', cbar=False)
+        ax.set_xticklabels(tokenizer.decode(summary_input_ids[0]).split(), rotation=90, fontsize=12)
+        ax.set_yticklabels([''])
+        ax.set_xlabel('Summary Tokens', fontsize=12, fontweight='bold')
+        ax.set_ylabel('')
+        ax.set_title('Attention Heatmap', fontsize=16, fontweight='bold')
+
+		# Save the plot in a pdf file
+        plt.savefig('heatmap.pdf', format='pdf', dpi=300, bbox_inches='tight')
+	
+
 
 def main():
     sns.set(style='whitegrid', palette='muted', font_scale = 1.2)
@@ -300,6 +349,7 @@ def main():
     )
 
     logger = TensorBoardLogger("lightning_logs", name='news-summary')
+
     trainer = pl.Trainer(
         logger=logger,
         callbacks=[checkpoint_callback],
@@ -318,10 +368,17 @@ def main():
     
     sample_row = df_test_trimmed.iloc[0]
     text = sample_row['article']
-    #print(text)
 
     model_summary = trained_model.inference_step(text)
-    #print(model_summary)
+
+    print("Original Text: ", text)
+
+    print("Generated Summary: ", model_summary)
+
+    text_input_ids = tokenizer.encode_plus(text, **tokenizer_kwargs)['input_ids']
+    summary_input_ids = tokenizer.encode_plus(model_summary, **tokenizer_kwargs)['input_ids']
+
+    trained_model.generate_attention_map(text_input_ids, summary_input_ids)
 
     val_dataloaders = NewsSummaryDataModule(df_validation_trimmed, tokenizer)
 
