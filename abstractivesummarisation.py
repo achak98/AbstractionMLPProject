@@ -18,7 +18,7 @@ from sklearn.model_selection import train_test_split
 from termcolor import colored
 import textwrap
 import rouge
-
+from nltk.translate.bleu_score import sentence_bleu
 from transformers import (
     AdamW,
     T5ForConditionalGeneration,
@@ -265,15 +265,23 @@ def summarizeText(text):
     ]
     return "".join(preds)
 
-def get_rouge_scores (test_data):
+def get_rouge_and_bleu_scores (test_data):
     rouge = Rouge()
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
+    bleu_scores = np.zeroes((5), dtype = float) # 0 -> indiv 1-gram, 1 -> indiv 2-gram ... 3 -> indiv 4-gram, 4 -> cumul 4-gram
     count = 0
     for stuff in df_test_trimmed:
         count+=1
         text = stuff['article']
         model_summary = summarizeText(text)
         scores = rouge.get_scores(model_summary, stuff['highlights'])
+        splitted_highlights = stuff['highlights'].split()
+        splitted_inference = model_summary.split()
+        bleu_scores[0] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (1,0,0,0)) - bleu_scores[0])/count
+        bleu_scores[1] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,1,0,0)) - bleu_scores[1])/count
+        bleu_scores[2] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,1,0)) - bleu_scores[2])/count
+        bleu_scores[3] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,0,1)) - bleu_scores[3])/count
+        bleu_scores[4] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0.25,0.25,0.25,0.25)) - bleu_scores[4])/count
         ROUGE_SCORE_RUNNING_AVG[0][0] += (scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
         ROUGE_SCORE_RUNNING_AVG[0][1] += (scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
         ROUGE_SCORE_RUNNING_AVG[0][2] += (scores["rouge-1"]["r"] - ROUGE_SCORE_RUNNING_AVG[0][2])/count
@@ -286,6 +294,8 @@ def get_rouge_scores (test_data):
     print("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2]))
     print("Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f}".format(f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2]))
     print("Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
+    print("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
+    b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
 
 def main():
     sns.set(style='whitegrid', palette='muted', font_scale = 1.2)
@@ -352,7 +362,7 @@ def main():
 
     trainer.validate(model=model, dataloaders=val_dataloaders)
 
-    get_rouge_scores(df_test_trimmed)
+    get_rouge_and_bleu_scores(df_test_trimmed)
     
 if __name__ == "__main__":
         main()
