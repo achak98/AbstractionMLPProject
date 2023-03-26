@@ -37,10 +37,10 @@ from matplotlib import rc
 # %config InlineBackend.figure_format= 'retina'
 
 torch.cuda.empty_cache()
-N_EPOCHS = 8
+N_EPOCHS = 1
 BATCH_SIZE = 8
 
-TOK_MAX_LENGTH = 1024
+TOK_MAX_LENGTH = 512
 
 MAX_LENGTH = 150
 LENGTH_PENALTY = 1.0
@@ -52,14 +52,14 @@ REPETITION_PENALTY = 2.5
 
 BASELINE_NAME = 't5-small'
 MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, max_length=TOK_MAX_LENGTH, truncation = True, padding='max_length')
     
 class NewsSummaryDataset(Dataset):
     def __init__(
         self,
         data: pd.DataFrame,
         tokenizer: AutoTokenizer,
-        text_max_token_len: int = 1024,
+        text_max_token_len: int = TOK_MAX_LENGTH,
         summary_max_token_len: int = 128
     ):
         self.tokenizer = tokenizer
@@ -114,7 +114,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         test_df: pd.DataFrame,
         tokenizer: AutoTokenizer,
         batch_size: int = 4,
-        text_max_token_len: int = 1024,
+        text_max_token_len: int = TOK_MAX_LENGTH,
         summary_max_token_len: int = 256
     ):
         super().__init__()
