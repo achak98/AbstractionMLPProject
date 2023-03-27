@@ -399,9 +399,8 @@ def main():
         logger=logger,
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
-        gpus = 2,
-        strategy="ddp_sharded",
-        precision=16
+        gpus = 4,
+        strategy="ddp_sharded"
     )
 
     trainer.fit(model, data_module)
