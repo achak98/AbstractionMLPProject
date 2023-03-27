@@ -26,7 +26,7 @@ from pylab import rcParams
 import matplotlib.pyplot as plt
 from matplotlib import rc
 
-from torchmetrics.text.rouge import ROUGEScore
+from rouge import Rouge
 from nltk.translate.bleu_score import sentence_bleu
 
 torch.cuda.empty_cache()
