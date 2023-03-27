@@ -221,6 +221,13 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
         bleu_scores[3] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,0,1)) - bleu_scores[3])/count
         bleu_scores[4] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0.25,0.25,0.25,0.25)) - bleu_scores[4])/count
         print(scores)
+        scores_dict = json.loads(scores)
+        # Output: {'name': 'Bob', 'languages': ['English', 'French']}
+        print(scores_dict)
+        # Output: ['English', 'French']
+        print(scores_dict['rouge-1'])
+        print(scores_dict['rouge-1']['f'])
+        print(scores_dict["rouge-1"]["f"])
         ROUGE_SCORE_RUNNING_AVG[0][0] += (scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
         ROUGE_SCORE_RUNNING_AVG[0][1] += (scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
         ROUGE_SCORE_RUNNING_AVG[0][2] += (scores["rouge-1"]["r"] - ROUGE_SCORE_RUNNING_AVG[0][2])/count
