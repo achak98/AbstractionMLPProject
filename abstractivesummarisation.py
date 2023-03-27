@@ -383,7 +383,7 @@ def main():
     model = NewsSummaryModel()
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath='/checkpoints',
+        dirpath='/home/s2300928/AbstractionMLPProject/checkpoints',
         filename='best-checkpoint',
         save_top_k=1,
         verbose=True,
