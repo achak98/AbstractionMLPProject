@@ -378,7 +378,7 @@ def main():
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
-    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer)
+    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer = tokenizer)
     
     model = NewsSummaryModel()
 
@@ -408,7 +408,7 @@ def main():
     )
     trained_model.freeze()
 
-    val_dataloaders = NewsSummaryDataModule(df_validation_trimmed, tokenizer)
+    val_dataloaders = NewsSummaryDataModule(df_validation_trimmed, tokenizer = tokenizer)
 
     trainer.validate(model=model, dataloaders=val_dataloaders)
 
