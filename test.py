@@ -220,6 +220,7 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
         bleu_scores[2] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,1,0)) - bleu_scores[2])/count
         bleu_scores[3] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,0,1)) - bleu_scores[3])/count
         bleu_scores[4] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0.25,0.25,0.25,0.25)) - bleu_scores[4])/count
+        print(scores)
         ROUGE_SCORE_RUNNING_AVG[0][0] += (scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
         ROUGE_SCORE_RUNNING_AVG[0][1] += (scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
         ROUGE_SCORE_RUNNING_AVG[0][2] += (scores["rouge-1"]["r"] - ROUGE_SCORE_RUNNING_AVG[0][2])/count
