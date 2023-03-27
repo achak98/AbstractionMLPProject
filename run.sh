@@ -41,4 +41,6 @@ export NVIDIA_SMI=$(nvidia-smi)
 
 echo $NVIDIA_SMI
 
-python abstractivesummarisation.py
+python train.py
+
+python test.py
