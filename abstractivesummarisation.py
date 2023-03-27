@@ -325,7 +325,6 @@ def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_
         CUSTOM_FILTERS = [lambda x: x.lower(), strip_non_alphanum, strip_multiple_whitespaces, remove_stopwords, stem_text]
     else:
         CUSTOM_FILTERS = [lambda x: x.lower(), strip_non_alphanum, strip_multiple_whitespaces, remove_stopwords]
-    df_test_trimmed = df_test[['article', 'highlights']]
 
     for itr in range (0, len(df_test_trimmed)):
         stuff = df_test_trimmed['article'].iloc[itr]
@@ -348,7 +347,11 @@ def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_
     
 def main():
 
+    print("wtf")
+
     pl.seed_everything(42)
+
+    print("wtf 2")
 
     print("Is any cuda device available?",torch.cuda.is_available())
     print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
