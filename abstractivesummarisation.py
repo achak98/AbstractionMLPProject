@@ -103,7 +103,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         train_df: pd.DataFrame,
         test_df: pd.DataFrame,
         tokenizer: T5Tokenizer,
-        batch_size: int = 4,
+        batch_size: int = 1,
         text_max_token_len: int = 1024,
         summary_max_token_len: int = 256
     ):
@@ -196,8 +196,8 @@ class NewsSummaryModel(pl.LightningModule):
             input_ids=input_ids,
             attention_mask=attention_mask,
             decoder_attention_mask=labels_attention_mask,
-            labels=labels,
-            batch_size=batch_size
+            labels=labels
+           # batch_size=batch_size
         )
 
         self.log("train_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
@@ -230,8 +230,8 @@ class NewsSummaryModel(pl.LightningModule):
             input_ids=input_ids,
             attention_mask=attention_mask,
             decoder_attention_mask=labels_attention_mask,
-            labels=labels,
-            batch_size=batch_size
+            labels=labels
+            #batch_size=batch_size
         )
 
         self.log("test_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
