@@ -38,8 +38,8 @@ from matplotlib import rc
 # %config InlineBackend.figure_format= 'retina'
 
 torch.cuda.empty_cache()
-N_EPOCHS = 8
-BATCH_SIZE = 8
+N_EPOCHS = 1
+BATCH_SIZE = 1
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
@@ -135,7 +135,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=0
+            num_workers=1
         )
 
     def test_dataloader(self):
@@ -143,7 +143,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=0
+            num_workers=1
         )
 
     def val_dataloader(self):
@@ -151,7 +151,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=0
+            num_workers=1
         )
 
 #text_token_counts, summary_token_counts = [], []
@@ -213,8 +213,8 @@ class NewsSummaryModel(pl.LightningModule):
             input_ids=input_ids,
             attention_mask=attention_mask,
             decoder_attention_mask=labels_attention_mask,
-            labels=labels,
-            batch_size=batch_size
+            labels=labels
+            #batch_size=batch_size
         )
 
         self.log("val_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
@@ -298,7 +298,7 @@ def get_rouge_and_bleu_scores (test_data):
     print("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
     b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
 
-def remove_stopwords(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
+def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
    
     for itr in range (0, len(df_test_trimmed)):
         stuff = df_test_trimmed['article'].iloc[itr]
@@ -363,7 +363,7 @@ def main():
     df_validation_trimmed = df_validation[['article', 'highlights']]
     
     
-    remove_stopwords(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
+    remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
@@ -385,7 +385,7 @@ def main():
         logger=logger,
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
-        gpus = 6
+        gpus = 2
     )
 
     trainer.fit(model, data_module)
