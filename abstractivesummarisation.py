@@ -286,7 +286,7 @@ def get_rouge_and_bleu_scores (df_test_trimmed):
         stuff = df_test_trimmed['article'].iloc[itr]
         what_stuffs_supposed_to_be = df_test_trimmed['highlights'].iloc[itr]
         count+=1
-        model_summary = summarizeText(text)
+        model_summary = summarizeText(stuff)
         scores = rouge.get_scores(model_summary, what_stuffs_supposed_to_be)
         splitted_highlights = what_stuffs_supposed_to_be.split()
         splitted_inference = model_summary.split()
