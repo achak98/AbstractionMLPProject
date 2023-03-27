@@ -169,7 +169,6 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels,
             decoder_attention_mask=decoder_attention_mask
         )
-        self.log(on_epoch=True, prog_bar=True, logger=True, batch_size=batch_size)
         return output.loss, output.logits
 
     def training_step(self, batch, batch_size):
