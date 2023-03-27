@@ -269,7 +269,7 @@ def summarizeText(text):
     ]
     return "".join(preds)
 
-def get_rouge_and_bleu_scores (test_data):
+def get_rouge_and_bleu_scores (df_test_trimmed):
     rouge = Rouge()
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     bleu_scores = np.zeroes((5), dtype = float) # 0 -> indiv 1-gram, 1 -> indiv 2-gram ... 3 -> indiv 4-gram, 4 -> cumul 4-gram
