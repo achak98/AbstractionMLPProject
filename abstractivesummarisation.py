@@ -17,7 +17,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
 from termcolor import colored
 import textwrap
-import rouge
+from rouge import Rouge
 from nltk.translate.bleu_score import sentence_bleu
 from gensim.parsing.preprocessing import remove_stopwords, preprocess_string, strip_multiple_whitespaces, stem_text, strip_non_alphanum
 from transformers import (
