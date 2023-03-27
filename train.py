@@ -237,24 +237,20 @@ class NewsSummaryModel(pl.LightningModule):
 
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
-    for itr in range (0, len(df_test_trimmed)):
+    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'):
         stuff = df_test_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_test_trimmed['article'].iloc[itr] = stuff
-        #print("removing stopwords test")
-    print("done with stop word removal in test")
-    for itr in range (0, len(df_train_trimmed)):
+        
+    for itr in tqdm(range (0, len(df_train_trimmed)), desc = 'Removing stopwords in train data'):
         stuff = df_train_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_train_trimmed['article'].iloc[itr] = stuff
-        #print("removing stopwords train")
-    print("done with stop word removal in train")
-    for itr in range (0, len(df_validation_trimmed)):
+        
+    for itr in tqdm(range (0, len(df_validation_trimmed)), desc = 'Removing stopwords in valdiation data'):
         stuff = df_validation_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_validation_trimmed['article'].iloc[itr] = stuff
-        #print("removing stopwords validation")
-    print("done with stop word removal in validation")
 
 def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem):
     
@@ -263,19 +259,19 @@ def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_
     else:
         CUSTOM_FILTERS = [lambda x: x.lower(), strip_non_alphanum, strip_multiple_whitespaces, remove_stopwords]
 
-    for itr in range (0, len(df_test_trimmed)):
+    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Preprocessing test data'):
         stuff = df_test_trimmed['article'].iloc[itr]
         stuff = preprocess_string(stuff , CUSTOM_FILTERS)
         stuff = " ".join(stuff)
         df_test_trimmed['article'].iloc[itr] = stuff
     
-    for itr in range (0, len(df_train_trimmed)):
+    for itr in tqdm(range (0, len(df_train_trimmed)), desc = 'Preprocessing train data'):
         stuff = df_train_trimmed['article'].iloc[itr]
         stuff = preprocess_string(stuff , CUSTOM_FILTERS)
         stuff = " ".join(stuff)
         df_train_trimmed['article'].iloc[itr] = stuff
         
-    for itr in range (0, len(df_validation_trimmed)):
+    for itr in tqdm(range (0, len(df_validation_trimmed)), desc = 'Preprocessing valdiation data'):
         stuff = df_validation_trimmed['article'].iloc[itr]
         stuff = preprocess_string(stuff , CUSTOM_FILTERS)
         stuff = " ".join(stuff)

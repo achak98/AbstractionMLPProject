@@ -26,7 +26,7 @@ from pylab import rcParams
 import matplotlib.pyplot as plt
 from matplotlib import rc
 
-from rouge import Rouge
+from torchmetrics.text.rouge import ROUGEScore
 from nltk.translate.bleu_score import sentence_bleu
 
 torch.cuda.empty_cache()
@@ -207,12 +207,12 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     bleu_scores = np.zeros((5), dtype = float) # 0 -> indiv 1-gram, 1 -> indiv 2-gram ... 3 -> indiv 4-gram, 4 -> cumul 4-gram
     count = 0
-    for itr in range (0, len(df_test_trimmed)):
+    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing Rouge and BLEU scores'):
         stuff = df_test_trimmed['article'].iloc[itr]
         what_stuffs_supposed_to_be = df_test_trimmed['highlights'].iloc[itr]
         count+=1
         model_summary = summarizeText(trained_model, stuff)
-        scores = rouge.get_scores(model_summary, what_stuffs_supposed_to_be)
+        rouge_scores = rouge.get_scores(model_summary, what_stuffs_supposed_to_be)
         splitted_highlights = what_stuffs_supposed_to_be.split()
         splitted_inference = model_summary.split()
         bleu_scores[0] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (1,0,0,0)) - bleu_scores[0])/count
@@ -220,23 +220,17 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
         bleu_scores[2] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,1,0)) - bleu_scores[2])/count
         bleu_scores[3] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,0,1)) - bleu_scores[3])/count
         bleu_scores[4] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0.25,0.25,0.25,0.25)) - bleu_scores[4])/count
-        print(scores)
-        scores_dict = json.loads(scores)
-        # Output: {'name': 'Bob', 'languages': ['English', 'French']}
-        print(scores_dict)
-        # Output: ['English', 'French']
-        print(scores_dict['rouge-1'])
-        print(scores_dict['rouge-1']['f'])
-        print(scores_dict["rouge-1"]["f"])
-        ROUGE_SCORE_RUNNING_AVG[0][0] += (scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
-        ROUGE_SCORE_RUNNING_AVG[0][1] += (scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
-        ROUGE_SCORE_RUNNING_AVG[0][2] += (scores["rouge-1"]["r"] - ROUGE_SCORE_RUNNING_AVG[0][2])/count
-        ROUGE_SCORE_RUNNING_AVG[1][0] += (scores["rouge-2"]["f"] - ROUGE_SCORE_RUNNING_AVG[1][0])/count
-        ROUGE_SCORE_RUNNING_AVG[1][1] += (scores["rouge-2"]["p"] - ROUGE_SCORE_RUNNING_AVG[1][1])/count
-        ROUGE_SCORE_RUNNING_AVG[1][2] += (scores["rouge-2"]["r"] - ROUGE_SCORE_RUNNING_AVG[1][2])/count
-        ROUGE_SCORE_RUNNING_AVG[2][0] += (scores["rouge-l"]["f"] - ROUGE_SCORE_RUNNING_AVG[2][0])/count
-        ROUGE_SCORE_RUNNING_AVG[2][1] += (scores["rouge-l"]["p"] - ROUGE_SCORE_RUNNING_AVG[2][1])/count
-        ROUGE_SCORE_RUNNING_AVG[2][2] += (scores["rouge-l"]["r"] - ROUGE_SCORE_RUNNING_AVG[2][2])/count
+       
+        rouge_scores = rouge_scores[0]
+        ROUGE_SCORE_RUNNING_AVG[0][0] += (rouge_scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
+        ROUGE_SCORE_RUNNING_AVG[0][1] += (rouge_scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
+        ROUGE_SCORE_RUNNING_AVG[0][2] += (rouge_scores["rouge-1"]["r"] - ROUGE_SCORE_RUNNING_AVG[0][2])/count
+        ROUGE_SCORE_RUNNING_AVG[1][0] += (rouge_scores["rouge-2"]["f"] - ROUGE_SCORE_RUNNING_AVG[1][0])/count
+        ROUGE_SCORE_RUNNING_AVG[1][1] += (rouge_scores["rouge-2"]["p"] - ROUGE_SCORE_RUNNING_AVG[1][1])/count
+        ROUGE_SCORE_RUNNING_AVG[1][2] += (rouge_scores["rouge-2"]["r"] - ROUGE_SCORE_RUNNING_AVG[1][2])/count
+        ROUGE_SCORE_RUNNING_AVG[2][0] += (rouge_scores["rouge-l"]["f"] - ROUGE_SCORE_RUNNING_AVG[2][0])/count
+        ROUGE_SCORE_RUNNING_AVG[2][1] += (rouge_scores["rouge-l"]["p"] - ROUGE_SCORE_RUNNING_AVG[2][1])/count
+        ROUGE_SCORE_RUNNING_AVG[2][2] += (rouge_scores["rouge-l"]["r"] - ROUGE_SCORE_RUNNING_AVG[2][2])/count
     print("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2]))
     print("Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f}".format(f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2]))
     print("Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
@@ -245,24 +239,22 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
 
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
-    for itr in range (0, len(df_test_trimmed)):
+    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'):
         stuff = df_test_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_test_trimmed['article'].iloc[itr] = stuff
-        #print("removing stopwords test")
-    print("done with stop word removal in test")
-    for itr in range (0, len(df_train_trimmed)):
+    
+    for itr in tqdm(range (0, len(df_train_trimmed)), desc = 'Removing stopwords in train data'):
         stuff = df_train_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_train_trimmed['article'].iloc[itr] = stuff
-        #print("removing stopwords train")
-    print("done with stop word removal in train")
-    for itr in range (0, len(df_validation_trimmed)):
+    
+    for itr in tqdm(range (0, len(df_validation_trimmed)), desc = 'Removing stopwords in valdiation data'):
         stuff = df_validation_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_validation_trimmed['article'].iloc[itr] = stuff
-        #print("removing stopwords validation")
-    print("done with stop word removal in validation")
+        
+    
 
 def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem):
     
@@ -271,19 +263,19 @@ def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_
     else:
         CUSTOM_FILTERS = [lambda x: x.lower(), strip_non_alphanum, strip_multiple_whitespaces, remove_stopwords]
 
-    for itr in range (0, len(df_test_trimmed)):
+    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Preprocessing test data'):
         stuff = df_test_trimmed['article'].iloc[itr]
         stuff = preprocess_string(stuff , CUSTOM_FILTERS)
         stuff = " ".join(stuff)
         df_test_trimmed['article'].iloc[itr] = stuff
     
-    for itr in range (0, len(df_train_trimmed)):
+    for itr in tqdm(range (0, len(df_train_trimmed)), desc = 'Preprocessing train data'):
         stuff = df_train_trimmed['article'].iloc[itr]
         stuff = preprocess_string(stuff , CUSTOM_FILTERS)
         stuff = " ".join(stuff)
         df_train_trimmed['article'].iloc[itr] = stuff
         
-    for itr in range (0, len(df_validation_trimmed)):
+    for itr in tqdm(range (0, len(df_validation_trimmed)), desc = 'Preprocessing valdiation data'):
         stuff = df_validation_trimmed['article'].iloc[itr]
         stuff = preprocess_string(stuff , CUSTOM_FILTERS)
         stuff = " ".join(stuff)
