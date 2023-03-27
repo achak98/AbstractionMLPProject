@@ -36,8 +36,8 @@ from matplotlib import rc
 # %config InlineBackend.figure_format= 'retina'
 
 torch.cuda.empty_cache()
-N_EPOCHS = 1
-BATCH_SIZE = 1
+N_EPOCHS = 8
+BATCH_SIZE = 128
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
@@ -102,7 +102,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         test_df: pd.DataFrame,
         val_df: pd.DataFrame,
         tokenizer: T5Tokenizer,
-        batch_size: int = 1,
+        batch_size: int,
         text_max_token_len: int = 1024,
         summary_max_token_len: int = 256
     ):
@@ -307,7 +307,7 @@ def main():
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
-    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer)
+    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
     
     model = NewsSummaryModel()
 
@@ -337,7 +337,10 @@ def main():
     print("VALIDATING!")
 
     trainer.validate(model=model, dataloaders=data_module)
-
+    
+    print("TESTING!")
+    
+    trainer.test(model=model, dataloaders=data_module)
     
     
 if __name__ == "__main__":

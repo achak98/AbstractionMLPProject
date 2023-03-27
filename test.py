@@ -30,8 +30,8 @@ from rouge import Rouge
 from nltk.translate.bleu_score import sentence_bleu
 
 torch.cuda.empty_cache()
-N_EPOCHS = 1
-BATCH_SIZE = 1
+N_EPOCHS = 8
+BATCH_SIZE = 128
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
@@ -43,7 +43,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         test_df: pd.DataFrame,
         val_df: pd.DataFrame,
         tokenizer: T5Tokenizer,
-        batch_size: int = 1,
+        batch_size: int,
         text_max_token_len: int = 1024,
         summary_max_token_len: int = 256
     ):
@@ -207,6 +207,10 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     bleu_scores = np.zeros((5), dtype = float) # 0 -> indiv 1-gram, 1 -> indiv 2-gram ... 3 -> indiv 4-gram, 4 -> cumul 4-gram
     count = 0
+    score_log1 = tqdm(total=0, position=1, bar_format='{desc}')
+    score_log2 = tqdm(total=0, position=1, bar_format='{desc}')
+    score_log3 = tqdm(total=0, position=1, bar_format='{desc}')
+    score_log4 = tqdm(total=0, position=1, bar_format='{desc}')
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing Rouge and BLEU scores'):
         stuff = df_test_trimmed['article'].iloc[itr]
         what_stuffs_supposed_to_be = df_test_trimmed['highlights'].iloc[itr]
@@ -231,11 +235,12 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
         ROUGE_SCORE_RUNNING_AVG[2][0] += (rouge_scores["rouge-l"]["f"] - ROUGE_SCORE_RUNNING_AVG[2][0])/count
         ROUGE_SCORE_RUNNING_AVG[2][1] += (rouge_scores["rouge-l"]["p"] - ROUGE_SCORE_RUNNING_AVG[2][1])/count
         ROUGE_SCORE_RUNNING_AVG[2][2] += (rouge_scores["rouge-l"]["r"] - ROUGE_SCORE_RUNNING_AVG[2][2])/count
-    print("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2]))
-    print("Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f}".format(f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2]))
-    print("Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
-    print("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
-    b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
+        
+        score_log1.set_description_str("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2]))
+        score_log2.set_description_str("Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f}".format(f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2]))
+        score_log3.set_description_str("Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
+        score_log4.set_description_str("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
+b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
 
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
@@ -310,7 +315,7 @@ def main():
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
-    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer)
+    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
 
     trained_model = NewsSummaryModel.load_from_checkpoint(
         checkpoint_path="/home/s2300928/AbstractionMLPProject/checkpoints/best-checkpoint.ckpt"
