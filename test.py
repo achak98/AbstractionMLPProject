@@ -29,6 +29,8 @@ from matplotlib import rc
 from rouge import Rouge
 from nltk.translate.bleu_score import sentence_bleu
 
+import warnings
+warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
 BATCH_SIZE = 128

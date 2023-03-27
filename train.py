@@ -15,8 +15,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
-from termcolor import colored
-import textwrap
 from gensim.parsing.preprocessing import remove_stopwords, preprocess_string, strip_multiple_whitespaces, stem_text, strip_non_alphanum
 from transformers import (
     AdamW,
@@ -27,17 +25,11 @@ from transformers import (
 
 from tqdm.auto import tqdm
 
-# Commented out IPython magic to ensure Python compatibility.
-import seaborn as sns
-from pylab import rcParams
-import matplotlib.pyplot as plt
-from matplotlib import rc
-# %matplotlib inline
-# %config InlineBackend.figure_format= 'retina'
+
 
 torch.cuda.empty_cache()
 N_EPOCHS = 8
-BATCH_SIZE = 128
+BATCH_SIZE = 32
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
@@ -175,7 +167,7 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels,
             decoder_attention_mask=decoder_attention_mask
         )
-
+        self.log(on_epoch=True, prog_bar=True, logger=True, batch_size=batch_size)
         return output.loss, output.logits
 
     def training_step(self, batch, batch_size):
@@ -297,7 +289,7 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
 
-    remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
+    #remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
