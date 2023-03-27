@@ -365,6 +365,11 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
     
+    df_train_trimmed = df_train_trimmed[:100]
+    df_test_trimmed = df_test_trimmed[:100]
+    df_validation_trimmed = df_validation_trimmed[:100]
+    
+    
     
     remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
