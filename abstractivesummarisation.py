@@ -102,6 +102,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         self,
         train_df: pd.DataFrame,
         test_df: pd.DataFrame,
+        val_df: pd.DataFrame,
         tokenizer: T5Tokenizer,
         batch_size: int = 1,
         text_max_token_len: int = 1024,
@@ -111,6 +112,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
 
         self.train_df = train_df
         self.test_df = test_df
+        self.val_df = val_df
         self.batch_size = batch_size
         self.tokenizer = tokenizer
         self.text_max_token_len = text_max_token_len
@@ -125,6 +127,12 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         )
         self.test_dataset = NewsSummaryDataset(
             self.test_df,
+            self.tokenizer,
+            self.text_max_token_len,
+            self.summary_max_token_len
+        )
+        self.val_dataset = NewsSummaryDataset(
+            self.val_df,
             self.tokenizer,
             self.text_max_token_len,
             self.summary_max_token_len
@@ -381,7 +389,7 @@ def main():
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
-    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, tokenizer = tokenizer)
+    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer)
     
     model = NewsSummaryModel()
 
@@ -400,7 +408,7 @@ def main():
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
         gpus = 2,
-        strategy='ddp', 
+        strategy='ddp',
         precision=16
     )
 
@@ -413,9 +421,7 @@ def main():
     )
     trained_model.freeze()
 
-    val_dataloaders = NewsSummaryDataModule(df_validation_trimmed, tokenizer = tokenizer)
-
-    trainer.validate(model=model, dataloaders=val_dataloaders)
+    trainer.validate(model=model, dataloaders=data_module)
 
     get_rouge_and_bleu_scores(df_test_trimmed)
     
