@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
-BATCH_SIZE = 4
+BATCH_SIZE = 2
 NO_OF_WORKERS = 8
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
