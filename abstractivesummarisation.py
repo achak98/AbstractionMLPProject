@@ -143,7 +143,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=1,
+            num_workers=8,
             persistent_workers=True
         )
 
@@ -152,7 +152,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=1,
+            num_workers=8,
             persistent_workers=True
         )
 
@@ -161,7 +161,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=1,
+            num_workers=8,
             persistent_workers=True
         )
 
@@ -414,12 +414,13 @@ def main():
 
     trainer.fit(model, data_module)
 
-    print("path: ",trainer.checkpoint_callback.best_model_path,":::")
+    """print("path: ",trainer.checkpoint_callback.best_model_path,":::")
+
 
     trained_model = NewsSummaryModel.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path
     )
-    trained_model.freeze()
+    trained_model.freeze()"""
 
     trainer.validate(model=model, dataloaders=data_module)
 
