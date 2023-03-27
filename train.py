@@ -26,10 +26,12 @@ from transformers import (
 from tqdm.auto import tqdm
 
 
-
+import warnings
+warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
 BATCH_SIZE = 32
+NO_OF_WORKERS = 8
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
@@ -133,7 +135,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=8,
+            num_workers=NO_OF_WORKERS,
             persistent_workers=True
         )
 
@@ -142,7 +144,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=8,
+            num_workers=NO_OF_WORKERS,
             persistent_workers=True
         )
 
@@ -151,7 +153,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=8,
+            num_workers=NO_OF_WORKERS,
             persistent_workers=True
         )
 
@@ -311,7 +313,7 @@ def main():
         logger=logger,
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
-        gpus = 2,
+        gpus = 3,
         strategy='ddp',
         precision=16
     )

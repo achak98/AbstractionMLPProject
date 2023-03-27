@@ -19,13 +19,6 @@ from transformers import (
 )
 
 from tqdm.auto import tqdm
-
-# Commented out IPython magic to ensure Python compatibility.
-import seaborn as sns
-from pylab import rcParams
-import matplotlib.pyplot as plt
-from matplotlib import rc
-
 from rouge import Rouge
 from nltk.translate.bleu_score import sentence_bleu
 
@@ -33,7 +26,8 @@ import warnings
 warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
-BATCH_SIZE = 128
+BATCH_SIZE = 32
+NO_OF_WORKERS = 8
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
@@ -84,7 +78,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=8,
+            num_workers=NO_OF_WORKERS,
             persistent_workers=True
         )
 
@@ -93,7 +87,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=8,
+            num_workers=NO_OF_WORKERS,
             persistent_workers=True
         )
 
@@ -102,7 +96,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=8,
+            num_workers=NO_OF_WORKERS,
             persistent_workers=True
         )
 
@@ -307,7 +301,7 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
     
-    remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
+    #remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
