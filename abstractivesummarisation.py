@@ -311,13 +311,13 @@ def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_tr
         stuff =  remove_stopwords(stuff)
         df_train_trimmed['article'].iloc[itr] = stuff
         #print("removing stopwords train")
-     print("done with stop word removal in train")
+    print("done with stop word removal in train")
     for itr in range (0, len(df_validation_trimmed)):
         stuff = df_validation_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_validation_trimmed['article'].iloc[itr] = stuff
         #print("removing stopwords validation")
-      print("done with stop word removal in validation")
+    print("done with stop word removal in validation")
 
 def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem):
     
