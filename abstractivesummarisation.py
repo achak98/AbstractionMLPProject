@@ -282,12 +282,13 @@ def get_rouge_and_bleu_scores (df_test_trimmed):
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     bleu_scores = np.zeros((5), dtype = float) # 0 -> indiv 1-gram, 1 -> indiv 2-gram ... 3 -> indiv 4-gram, 4 -> cumul 4-gram
     count = 0
-    for stuff in df_test_trimmed:
+    for itr in range (0, len(df_test_trimmed)):
+        stuff = df_test_trimmed['article'].iloc[itr]
+        what_stuffs_supposed_to_be = df_test_trimmed['highlights'].iloc[itr]
         count+=1
-        text = stuff['article']
         model_summary = summarizeText(text)
-        scores = rouge.get_scores(model_summary, stuff['highlights'])
-        splitted_highlights = stuff['highlights'].split()
+        scores = rouge.get_scores(model_summary, what_stuffs_supposed_to_be)
+        splitted_highlights = what_stuffs_supposed_to_be.split()
         splitted_inference = model_summary.split()
         bleu_scores[0] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (1,0,0,0)) - bleu_scores[0])/count
         bleu_scores[1] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,1,0,0)) - bleu_scores[1])/count
