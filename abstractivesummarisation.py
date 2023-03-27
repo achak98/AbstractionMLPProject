@@ -400,7 +400,7 @@ def main():
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
         gpus = 2,
-        accelerator=’ddp’, 
+        accelerator='ddp', 
         precision=16
     )
 
