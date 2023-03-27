@@ -135,7 +135,8 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=1
+            num_workers=1,
+            persistent_workers=True
         )
 
     def test_dataloader(self):
@@ -143,7 +144,8 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=1
+            num_workers=1,
+            persistent_workers=True
         )
 
     def val_dataloader(self):
@@ -151,7 +153,8 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=1
+            num_workers=1,
+            persistent_workers=True
         )
 
 #text_token_counts, summary_token_counts = [], []
