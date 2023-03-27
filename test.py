@@ -176,7 +176,7 @@ class NewsSummaryModel(pl.LightningModule):
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
         
-def summarizeText(text):
+def summarizeText(trained_model, text):
     text_encoding = tokenizer(
         text,
         max_length=1024,
@@ -202,7 +202,7 @@ def summarizeText(text):
     ]
     return "".join(preds)
 
-def get_rouge_and_bleu_scores (df_test_trimmed):
+def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
     rouge = Rouge()
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     bleu_scores = np.zeros((5), dtype = float) # 0 -> indiv 1-gram, 1 -> indiv 2-gram ... 3 -> indiv 4-gram, 4 -> cumul 4-gram
@@ -211,7 +211,7 @@ def get_rouge_and_bleu_scores (df_test_trimmed):
         stuff = df_test_trimmed['article'].iloc[itr]
         what_stuffs_supposed_to_be = df_test_trimmed['highlights'].iloc[itr]
         count+=1
-        model_summary = summarizeText(stuff)
+        model_summary = summarizeText(trained_model, stuff)
         scores = rouge.get_scores(model_summary, what_stuffs_supposed_to_be)
         splitted_highlights = what_stuffs_supposed_to_be.split()
         splitted_inference = model_summary.split()
@@ -317,7 +317,7 @@ def main():
     )
     trained_model.freeze()
 
-    get_rouge_and_bleu_scores(df_test_trimmed)
+    get_rouge_and_bleu_scores(trained_model, df_test_trimmed)
     
 if __name__ == "__main__":
         main()
