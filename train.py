@@ -313,7 +313,7 @@ def main():
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
         gpus = 3,
-        strategy='ddp',
+        strategy='ddp_spawn',
         precision=16
     )
 
