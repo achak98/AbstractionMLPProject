@@ -23,6 +23,11 @@ from tqdm.auto import tqdm
 from rouge import Rouge
 from nltk.translate.bleu_score import sentence_bleu
 
+import seaborn as sns
+from pylab import rcParams
+import matplotlib.pyplot as plt
+from matplotlib import rc
+
 import warnings
 warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
