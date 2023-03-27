@@ -299,25 +299,25 @@ def get_rouge_and_bleu_scores (test_data):
     b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
 
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
-   
+    print("starting stop word removal")
     for itr in range (0, len(df_test_trimmed)):
         stuff = df_test_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_test_trimmed['article'].iloc[itr] = stuff
-        print("removing stopwords test")
-    
+        #print("removing stopwords test")
+    print("done with stop word removal in test")
     for itr in range (0, len(df_train_trimmed)):
         stuff = df_train_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_train_trimmed['article'].iloc[itr] = stuff
-        print("removing stopwords train")
-     
+        #print("removing stopwords train")
+     print("done with stop word removal in train")
     for itr in range (0, len(df_validation_trimmed)):
         stuff = df_validation_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
         df_validation_trimmed['article'].iloc[itr] = stuff
-        print("removing stopwords validation")
-     
+        #print("removing stopwords validation")
+      print("done with stop word removal in validation")
 
 def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem):
     
