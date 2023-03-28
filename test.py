@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
 BATCH_SIZE = 2
-NO_OF_WORKERS = 8
+NO_OF_WORKERS = 0
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
