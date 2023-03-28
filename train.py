@@ -136,7 +136,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=NO_OF_WORKERS,
-            persistent_workers=True
+            persistent_workers=False
         )
 
     def test_dataloader(self):
@@ -145,7 +145,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=NO_OF_WORKERS,
-            persistent_workers=True
+            persistent_workers=False
         )
 
     def val_dataloader(self):
@@ -154,7 +154,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=NO_OF_WORKERS,
-            persistent_workers=True
+            persistent_workers=False
         )
 
 class NewsSummaryModel(pl.LightningModule):
