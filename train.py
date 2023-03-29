@@ -333,7 +333,7 @@ def main():
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
         accelerator = 'gpu',
-        devices = 1
+        devices = 4
     )
 
     trainer.fit(model, data_module)
