@@ -25,7 +25,7 @@ from transformers import (
 
 from tqdm.auto import tqdm
 
-
+from joblib import Parallel, delayed
 import warnings
 warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
@@ -228,8 +228,21 @@ class NewsSummaryModel(pl.LightningModule):
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
 
+def async_stop_word_removal (itr, df):
+    stuff = df['article'].iloc[itr]
+    stuff =  remove_stopwords(stuff)
+    df['article'].iloc[itr] = stuff
+    break
+
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
+    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'))
+
+    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data')) 
+    
+    
+    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data')) 
+    
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'):
         stuff = df_test_trimmed['article'].iloc[itr]
         stuff =  remove_stopwords(stuff)
@@ -274,7 +287,7 @@ def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_
 def main():
 
     pl.seed_everything(42)
-
+    torch.set_float32_matmul_precision('medium')
     print("Is any cuda device available?",torch.cuda.is_available())
     print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
 
@@ -290,7 +303,7 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
 
-    #remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
+    remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
@@ -312,6 +325,8 @@ def main():
         logger=logger,
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
+        accelerator = 'gpu',
+        devices = 1
     )
 
     trainer.fit(model, data_module)
