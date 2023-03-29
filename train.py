@@ -236,7 +236,8 @@ def async_stop_word_removal (itr, df):
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
     print ("BEFORE: ", df_test_trimmed['article'].iloc[0])
-    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'))
+#    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'))
+    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in range (0, len(df_test_trimmed))
     print ("AFTER: ", df_test_trimmed['article'].iloc[0])
     Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_train_trimmed) for itr in tqdm(range (0, len(df_train_trimmed)), desc = 'Removing stopwords in train data'))
     
