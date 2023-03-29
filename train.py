@@ -295,12 +295,16 @@ def main():
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
+    df_test_trimmed.to_csv('CNN DailyMail Summarisation Data/test_stopwords.csv')
+    df_train_trimmed.to_csv('CNN DailyMail Summarisation Data/train_stopwords.csv')
+    df_validation_trimmed.to_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv')
+    
     data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
     
     model = NewsSummaryModel()
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath='baseline/checkpoints',
+        dirpath='stopwords/checkpoints',
         filename='best-checkpoint',
         save_top_k=1,
         verbose=True,
