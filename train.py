@@ -279,25 +279,40 @@ def main():
     print("Is any cuda device available?",torch.cuda.is_available())
     print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
 
-    test = "CNN DailyMail Summarisation Data/test.csv"
-    train = "CNN DailyMail Summarisation Data/train.csv"
-    validation = "CNN DailyMail Summarisation Data/validation.csv"
+    #test = "CNN DailyMail Summarisation Data/test.csv"
+    #train = "CNN DailyMail Summarisation Data/train.csv"
+    #validation = "CNN DailyMail Summarisation Data/validation.csv"
 
-    df_train = pd.read_csv(train, encoding = "latin-1")
-    df_test = pd.read_csv(test, encoding = "latin-1")
-    df_validation = pd.read_csv(validation, encoding = "latin-1")
+    #df_train = pd.read_csv(train, encoding = "latin-1")
+    #df_test = pd.read_csv(test, encoding = "latin-1")
+    #df_validation = pd.read_csv(validation, encoding = "latin-1")
 
-    df_train_trimmed = df_train[['article', 'highlights']]
-    df_test_trimmed = df_test[['article', 'highlights']]
-    df_validation_trimmed = df_validation[['article', 'highlights']]
+    #df_train_trimmed = df_train[['article', 'highlights']]
+    #df_test_trimmed = df_test[['article', 'highlights']]
+    #df_validation_trimmed = df_validation[['article', 'highlights']]
 
-    #remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
-    remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
+    #remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
+    #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     
-    df_test_trimmed.to_csv('CNN DailyMail Summarisation Data/test_preproc_nostem.csv')
-    df_train_trimmed.to_csv('CNN DailyMail Summarisation Data/train_preproc_nostem.csv')
-    df_validation_trimmed.to_csv('CNN DailyMail Summarisation Data/validation_preproc_nostem.csv')
+    
+   # df_test_trimmed.to_csv('CNN DailyMail Summarisation Data/test_preproc_no_stem.csv')
+   # df_train_trimmed.to_csv('CNN DailyMail Summarisation Data/train_preproc_no_stem.csv')
+   # df_validation_trimmed.to_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv')
+    
+    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_stopwords.csv', encoding = "latin-1")
+    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_stopwords.csv', encoding = "latin-1")
+    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv', encoding = "latin-1")
+    
+    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_no_stem.csv', encoding = "latin-1")
+    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_no_stem.csv', encoding = "latin-1")
+    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv', encoding = "latin-1")
+    
+    df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
+    df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
+    df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
+
+    
     
     data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
     
