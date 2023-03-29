@@ -30,7 +30,7 @@ import warnings
 warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
-BATCH_SIZE = 2
+BATCH_SIZE = 16
 NO_OF_WORKERS = 0
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
@@ -299,7 +299,7 @@ def main():
     model = NewsSummaryModel()
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath='/home/s2300928/AbstractionMLPProject/checkpoints',
+        dirpath='baseline/checkpoints',
         filename='best-checkpoint',
         save_top_k=1,
         verbose=True,
@@ -312,9 +312,6 @@ def main():
         logger=logger,
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
-        gpus = 3,
-        strategy='ddp',
-        precision=16
     )
 
     trainer.fit(model, data_module)
