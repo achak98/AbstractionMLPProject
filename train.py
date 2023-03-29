@@ -291,20 +291,20 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
 
-    remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
-    #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
+    #remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
+    remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     
-    df_test_trimmed.to_csv('CNN DailyMail Summarisation Data/test_stopwords.csv')
-    df_train_trimmed.to_csv('CNN DailyMail Summarisation Data/train_stopwords.csv')
-    df_validation_trimmed.to_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv')
+    df_test_trimmed.to_csv('CNN DailyMail Summarisation Data/test_preproc_nostem.csv')
+    df_train_trimmed.to_csv('CNN DailyMail Summarisation Data/train_preproc_nostem.csv')
+    df_validation_trimmed.to_csv('CNN DailyMail Summarisation Data/validation_preproc_nostem.csv')
     
     data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
     
     model = NewsSummaryModel()
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath='stopwords/checkpoints',
+        dirpath='preproc_nostem/checkpoints',
         filename='best-checkpoint',
         save_top_k=1,
         verbose=True,
