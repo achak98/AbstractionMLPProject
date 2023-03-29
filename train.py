@@ -236,27 +236,13 @@ def async_stop_word_removal (itr, df):
 
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
+    print ("BEFORE: ", df['article'].iloc[0])
     Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'))
-
-    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data')) 
+    print ("AFTER: ", df['article'].iloc[0])
+    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_train_trimmed) for itr in tqdm(range (0, len(df_train_trimmed)), desc = 'Removing stopwords in train data'))
     
+    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_validation_trimmed) for itr in tqdm(range (0, len(df_validation_trimmed)), desc = 'Removing stopwords in validation data'))
     
-    Parallel(n_jobs=8)(delayed(async_stop_word_removal)(itr, df_test_trimmed) for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data')) 
-    
-    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'):
-        stuff = df_test_trimmed['article'].iloc[itr]
-        stuff =  remove_stopwords(stuff)
-        df_test_trimmed['article'].iloc[itr] = stuff
-        
-    for itr in tqdm(range (0, len(df_train_trimmed)), desc = 'Removing stopwords in train data'):
-        stuff = df_train_trimmed['article'].iloc[itr]
-        stuff =  remove_stopwords(stuff)
-        df_train_trimmed['article'].iloc[itr] = stuff
-        
-    for itr in tqdm(range (0, len(df_validation_trimmed)), desc = 'Removing stopwords in valdiation data'):
-        stuff = df_validation_trimmed['article'].iloc[itr]
-        stuff =  remove_stopwords(stuff)
-        df_validation_trimmed['article'].iloc[itr] = stuff
 
 def remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem):
     
