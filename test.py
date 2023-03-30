@@ -109,7 +109,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
 class NewsSummaryModel(pl.LightningModule):
     def __init__(self):
         super().__init__()
-        self.model = T5ForConditionalGeneration.from_pretrained(FT_MODEL_NAME, return_dict=True)
+        self.model = T5ForConditionalGeneration.from_pretrained(FT_MODEL_NAME, return_dict=True, output_attentions = True, return_dict_in_generate=True)
     
     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
         output = self.model(
@@ -186,22 +186,31 @@ class NewsSummaryModel(pl.LightningModule):
         output = self.model.generate(
 	        input_ids=text_input_ids,
 	        attention_mask=(text_input_ids != tokenizer.pad_token_id),
-	        **self.generate_kwargs
+                max_length=100, 
+                num_beams=4, 
+                early_stopping=True
 	    )
 
+        #print("output: ",output)
+        print("output['sequences'] shape: ",output['sequences'].size()) 
+        print("output output type: ", type(output).__name__)
         # Get the attention scores from the last layer of the decoder
-        last_layer_attention = self.model.decoder.attention_weights[-1]
-
+        print("type of output['decoder_attentions'][-1]: ", type(output['decoder_attentions'][-1]).__name__)
+        print("type of output['decoder_attentions'][-1][-1]: ", type(output['decoder_attentions'][-1][-1]).__name__)
+        last_layer_attention = output['decoder_attentions'][-1]
+        print("shape of last_layer_attention: ", len(last_layer_attention))
         # Reshape the attention scores to match the output shape
-        last_layer_attention = last_layer_attention.view(
-	        output.size(0),
-	        self.model.config.num_heads,
-	        -1,
-	        output.size(-1)
-	    )
-
+        last_layer_attention = torch.stack(list(last_layer_attention), dim=0)
+        #last_layer_attention = last_layer_attention.squeeze(0)
+        #last_layer_attention = last_layer_attention.view(
+	#        output['sequences'].size(0),
+	#        self.model.config.num_heads,
+	#        -1,
+	#        output['sequences'].size(-1)
+	#    )
+        last_layer_attention
         # Compute the attention scores for the summary tokens
-        summary_attention = last_layer_attention[:, :, -summary_input_ids.shape[1]:, :]
+        summary_attention = last_layer_attention[:, :, -len(summary_input_ids[0]):, :]
 
         # Sum the attention scores across the heads and normalize them
         summary_attention = summary_attention.sum(dim=1)
@@ -209,12 +218,16 @@ class NewsSummaryModel(pl.LightningModule):
 	
 	    # Convert the attention scores to a numpy array
         summary_attention = summary_attention.detach().cpu().numpy()
-	
+        print("summary_attention: ", summary_attention)
+        print("summary_attention: ", summary_attention.size)
 	    # Plot the heatmap
+        sa = summary_attention[0].squeeze()
+        print("summary_attention[0].squeeze(): ", sa.size())
+        print("shize tokenizer.decode(summary_input_ids[0]): ", tokenizer.decode(summary_input_ids[0]).size())
         sns.set(style='whitegrid', font_scale=1.2)
         rcParams['figure.figsize'] = 8, 4
         rc('font', weight='bold')
-        ax = sns.heatmap(summary_attention[0], cmap='YlGnBu', annot=True, fmt='.2f', cbar=False)
+        ax = sns.heatmap(sa, cmap='YlGnBu', annot=True, fmt='.2f', cbar=False)
         ax.set_xticklabels(tokenizer.decode(summary_input_ids[0]).split(), rotation=90, fontsize=12)
         ax.set_yticklabels([''])
         ax.set_xlabel('Summary Tokens', fontsize=12, fontweight='bold')
@@ -222,7 +235,7 @@ class NewsSummaryModel(pl.LightningModule):
         ax.set_title('Attention Heatmap', fontsize=16, fontweight='bold')
 
 		# Save the plot in a pdf file
-        plt.savefig('heatmap.pdf', format='pdf', dpi=300, bbox_inches='tight')
+        plt.savefig('baseline/heatmap.pdf', format='pdf', dpi=300, bbox_inches='tight')
         
 def summarizeText(trained_model, text):
     text_encoding = tokenizer(
@@ -246,7 +259,7 @@ def summarizeText(trained_model, text):
 
     preds = [
             tokenizer.decode(gen_id, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-            for gen_id in generated_ids
+            for gen_id in generated_ids['sequences']
     ]
     return "".join(preds)
 
@@ -365,6 +378,7 @@ def main():
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
     
+
     data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
 
     trained_model = NewsSummaryModel.load_from_checkpoint(
@@ -376,14 +390,21 @@ def main():
     text = sample_row['article']
 
     input_ids = tokenizer.encode(text, return_tensors='pt')
-    outputs = trained_model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
-    model_summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    print("trained model type: ", type(trained_model).__name__)
+    print("trained_model.mode. type: ", type(trained_model.model).__name__)
+    outputs = trained_model.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
+    print("output: ",outputs.keys())
+    print("output output type: ", type(outputs).__name__)
+    print("output seq shape: ", outputs['sequences'].size())
+    model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
-    print("Original Text: ", text)
+    #print("Original Text: ", text)
     print("Generated Summary: ", model_summary)
 
-    text_input_ids = tokenizer.encode_plus(text)['input_ids']
-    summary_input_ids = tokenizer.encode_plus(model_summary)['input_ids']
+    text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
+    
+    summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
+    #print("size of summary_input_ids: ", sum
 
     trained_model.generate_attention_map(text_input_ids, summary_input_ids)
 

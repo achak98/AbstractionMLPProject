@@ -279,38 +279,38 @@ def main():
     print("Is any cuda device available?",torch.cuda.is_available())
     print("Number of available cuda devices:",torch._C._cuda_getDeviceCount())
 
-    #test = "CNN DailyMail Summarisation Data/test.csv"
-    #train = "CNN DailyMail Summarisation Data/train.csv"
-    #validation = "CNN DailyMail Summarisation Data/validation.csv"
+    test = "CNN DailyMail Summarisation Data/test.csv"
+    train = "CNN DailyMail Summarisation Data/train.csv"
+    validation = "CNN DailyMail Summarisation Data/validation.csv"
 
-    #df_train = pd.read_csv(train, encoding = "latin-1")
-    #df_test = pd.read_csv(test, encoding = "latin-1")
-    #df_validation = pd.read_csv(validation, encoding = "latin-1")
+    df_train = pd.read_csv(train, encoding = "latin-1")
+    df_test = pd.read_csv(test, encoding = "latin-1")
+    df_validation = pd.read_csv(validation, encoding = "latin-1")
 
-    #df_train_trimmed = df_train[['article', 'highlights']]
-    #df_test_trimmed = df_test[['article', 'highlights']]
-    #df_validation_trimmed = df_validation[['article', 'highlights']]
+    df_train_trimmed = df_train[['article', 'highlights']]
+    df_test_trimmed = df_test[['article', 'highlights']]
+    df_validation_trimmed = df_validation[['article', 'highlights']]
 
     #remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
     #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
     
     
-   # df_test_trimmed.to_csv('CNN DailyMail Summarisation Data/test_preproc_no_stem.csv')
-   # df_train_trimmed.to_csv('CNN DailyMail Summarisation Data/train_preproc_no_stem.csv')
-   # df_validation_trimmed.to_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv')
+    #df_test_trimmed.to_csv('CNN DailyMail Summarisation Data/test_stopwords.csv')
+    #df_train_trimmed.to_csv('CNN DailyMail Summarisation Data/train_preproc_stopwords.csv')
+    #df_validation_trimmed.to_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv')
     
-    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_stopwords.csv', encoding = "latin-1")
-    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_stopwords.csv', encoding = "latin-1")
-    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv', encoding = "latin-1")
+    df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_stopwords.csv', encoding = "latin-1")
+    df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_stopwords.csv', encoding = "latin-1")
+    df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv', encoding = "latin-1")
     
     #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_no_stem.csv', encoding = "latin-1")
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_no_stem.csv', encoding = "latin-1")
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv', encoding = "latin-1")
     
-    df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
-    df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
-    df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
+    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
+    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
+    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
 
     
     
@@ -319,7 +319,7 @@ def main():
     model = NewsSummaryModel()
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath='preproc_nostem/checkpoints',
+        dirpath='stopwords/checkpoints',
         filename='best-checkpoint',
         save_top_k=1,
         verbose=True,
@@ -333,8 +333,10 @@ def main():
         callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
         accelerator = 'gpu',
-        devices = 4
+        devices = 2
     )
+        
+    #model.load_from_checkpoint('stopwords/checkpoints/best-checkpoint.ckpt')
 
     trainer.fit(model, data_module)
 
