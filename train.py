@@ -300,9 +300,9 @@ def main():
    # df_train_trimmed.to_csv('CNN DailyMail Summarisation Data/train_preproc_no_stem.csv')
    # df_validation_trimmed.to_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv')
     
-    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_stopwords.csv', encoding = "latin-1")
-    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_stopwords.csv', encoding = "latin-1")
-    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv', encoding = "latin-1")
+    df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_stopwords.csv', encoding = "latin-1")
+    df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_stopwords.csv', encoding = "latin-1")
+    df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv', encoding = "latin-1")
     
     #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_no_stem.csv', encoding = "latin-1")
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_no_stem.csv', encoding = "latin-1")

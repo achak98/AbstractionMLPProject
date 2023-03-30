@@ -32,7 +32,7 @@ import warnings
 warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
-BATCH_SIZE = 2
+BATCH_SIZE = 16
 NO_OF_WORKERS = 0
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
@@ -353,14 +353,22 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
     
-    #remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed)
-    #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = True) #ALT POINT IN EXPERIMENT
-    #remove_stopwords_and_do_other_fancy_shmancy_stuff(df_test_trimmed, df_train_trimmed, df_validation_trimmed, stem = False) #ALT POINT IN EXPERIMENT
+    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_stopwords.csv', encoding = "latin-1")
+    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_stopwords.csv', encoding = "latin-1")
+    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv', encoding = "latin-1")
+    
+    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_no_stem.csv', encoding = "latin-1")
+    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_no_stem.csv', encoding = "latin-1")
+    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv', encoding = "latin-1")
+    
+    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
+    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
+    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
     
     data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
 
     trained_model = NewsSummaryModel.load_from_checkpoint(
-        checkpoint_path="/home/s2300928/AbstractionMLPProject/checkpoints/best-checkpoint.ckpt"
+        checkpoint_path="baseline/checkpoints/best-checkpoint.ckpt"
     )
     trained_model.freeze()
 
