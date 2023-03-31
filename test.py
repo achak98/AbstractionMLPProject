@@ -22,8 +22,8 @@ from transformers import (
 )
 
 from tqdm.auto import tqdm
-from rouge import Rouge
-from nltk.translate.bleu_score import sentence_bleu
+import evaluate
+
 import seaborn as sns
 from pylab import rcParams
 import matplotlib.pyplot as plt
@@ -386,15 +386,16 @@ def summarizeText(trained_model, text):
     return "".join(preds)
 
 def get_rouge_and_bleu_scores (prediction, df_test_trimmed):
-    rouge = Rouge()
-    ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
-    count = 0
-    score_log1 = tqdm(total=0, position=1, bar_format='{desc}')
+    rouge = evaluate.load('rouge')
+
+#ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
+    #count = 0
+    #score_log1 = tqdm(total=0, position=1, bar_format='{desc}')
     target = []
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing target'):
         target.append(df_test_trimmed['highlights'].iloc[itr])
-    rouge_scores = rouge.get_scores(prediction, target)
-    print(rouge_scores)
+    results = rouge.compute(predictions=prediction, references=target)
+    print(results)
     """
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing Rouge scores'):
         stuff = df_test_trimmed['article'].iloc[itr]
