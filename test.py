@@ -274,7 +274,7 @@ class NewsSummaryModel(pl.LightningModule):
         ax = sns.heatmap(summary_attention_dec[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
         # Save the plot in a pdf file
         plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
-
+        print("done")
 
         return output.loss, output.logits
 
