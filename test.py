@@ -214,7 +214,8 @@ class NewsSummaryModel(pl.LightningModule):
             # Convert the attention scores to a numpy array
             summary_attention = summary_attention.detach().cpu().numpy()
             for i in range (len(summary_attention[0][0])):
-                summary_attention_average[0][0][i] += summary_attention[0][0][i]
+                for j in range (len(summary_attention[0][0][i]))
+                summary_attention_average[0][0][i][j] += summary_attention[0][0][i][j]
             
             
 	    # Plot the heatmap
@@ -222,8 +223,8 @@ class NewsSummaryModel(pl.LightningModule):
         rcParams['figure.figsize'] = 80, 40
         rc('font')
         summary_attention_average = summary_attention_average.squeeze(0)
-        x = [tokenizer.decode(token) for token in summary_input_ids[0]]
-        y = [tokenizer.decode(token) for token in text_input_ids[0]]
+        y = [tokenizer.decode(token) for token in summary_input_ids[0]]
+        x = [tokenizer.decode(token) for token in text_input_ids[0]]
         sns.set(font_scale=2.1)
         ax = sns.heatmap(summary_attention_average[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
         ax.set_xticklabels(x, rotation=90, fontsize=40)
