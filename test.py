@@ -218,7 +218,7 @@ class NewsSummaryModel(pl.LightningModule):
         text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
         input_ids = tokenizer.encode(text, return_tensors='pt')
         print("11111111")
-        outputs = self.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
+        outputs = self.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True).cuda()
         model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
         text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
