@@ -148,14 +148,14 @@ class NewsSummaryDataModule(pl.LightningDataModule):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            shuffle=False,
+            shuffle=True,
             num_workers=NO_OF_WORKERS,
             persistent_workers=False
         )
 
     def val_dataloader(self):
         return DataLoader(
-            self.test_dataset,
+            self.val_dataset,
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=NO_OF_WORKERS,
@@ -214,29 +214,27 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels,
             decoder_attention_mask=decoder_attention_mask
         )
-        print("0000000")
+        """
         text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
         input_ids = tokenizer.encode(text, return_tensors='pt').cuda()
-        print("11111111")
+        
         outputs = self.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
         model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
         text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids'].cuda()
-        print("22222222")
+        
         summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids'].cuda()
         last_layer_attention_cross = output['cross_attentions'][-1].cuda()
         last_layer_attention_enc = output['encoder_attentions'][-1].cuda()
         last_layer_attention_dec = output['decoder_attentions'][-1].cuda()
-        print("3333333")
+        
         summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):].cuda()
         summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):].cuda()
         summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):].cuda()
         # Sum the attention scores across the heads and normalize them
         summary_attention_cross = summary_attention_cross.sum(dim=1, keepdim =True)
         summary_attention_cross /= summary_attention_cross.sum(dim=-1, keepdim=True)
-        print("summary_attention_cross: ", summary_attention_cross)
-        print("summary_attention_enc: ", summary_attention_enc)
-        print("summary_attention_dec: ", summary_attention_dec)
+
 # Sum the attention scores across the heads and normalize them
         summary_attention_enc = summary_attention_enc.sum(dim=1, keepdim =True)
         summary_attention_enc /= summary_attention_enc.sum(dim=-1, keepdim=True)
@@ -273,7 +271,7 @@ class NewsSummaryModel(pl.LightningModule):
             ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
             #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
             plt.savefig('baseline/heatmap_cross.pdf', format='pdf', dpi=300, bbox_inches='tight')
-            print("cross done")
+            
         
         if(summary_attention_enc.any() > 0):
             sns.set(style='whitegrid', font_scale=1)
@@ -298,7 +296,7 @@ class NewsSummaryModel(pl.LightningModule):
             ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
             
             plt.savefig('baseline/heatmap_enc.pdf', format='pdf', dpi=300, bbox_inches='tight')
-            print("enc done")
+            
         
         if(summary_attention_dec.any() > 0):
             sns.set(style='whitegrid', font_scale=1)
@@ -325,7 +323,7 @@ class NewsSummaryModel(pl.LightningModule):
             
             # Save the plot in a pdf file
             plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
-            print("dec done")
+            """
         
         return output.loss, output.logits
 
@@ -397,7 +395,7 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels
             #batch_size=batch_size
         )
-        """
+        
         generated_ids = self.model.generate(
             input_ids=batch['text_input_ids'],
             attention_mask=batch['text_attention_mask'],
@@ -411,8 +409,7 @@ class NewsSummaryModel(pl.LightningModule):
         for i in range(len(generated_ids['sequences'])):
             genid = generated_ids['sequences'][i]
         return tokenizer.decode(genid, skip_special_tokens=True)
-        """
-        return ""
+
 
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
@@ -521,37 +518,7 @@ def get_rouge_and_bleu_scores (prediction, df_test_trimmed):
         target.append(df_test_trimmed['highlights'].iloc[itr])
     results = rouge.compute(predictions=prediction, references=target)
     print(results)
-    """
-    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing Rouge scores'):
-        stuff = df_test_trimmed['article'].iloc[itr]
-        what_stuffs_supposed_to_be = df_test_trimmed['highlights'].iloc[itr]
-        count+=1
-        model_summary = summarizeText(trained_model, stuff)
-        rouge_scores = rouge.get_scores(model_summary, what_stuffs_supposed_to_be)
-        """"""
-        splitted_highlights = what_stuffs_supposed_to_be.split()
-        splitted_inference = model_summary.split()
-        bleu_scores[0] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (1,0,0,0)) - bleu_scores[0])/count
-        bleu_scores[1] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,1,0,0)) - bleu_scores[1])/count
-        bleu_scores[2] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,1,0)) - bleu_scores[2])/count
-        bleu_scores[3] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,0,1)) - bleu_scores[3])/count
-        bleu_scores[4] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0.25,0.25,0.25,0.25)) - bleu_scores[4])/count
-       """"""
-        rouge_scores = rouge_scores[0]
-        ROUGE_SCORE_RUNNING_AVG[0][0] += (rouge_scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
-        ROUGE_SCORE_RUNNING_AVG[0][1] += (rouge_scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
-        ROUGE_SCORE_RUNNING_AVG[0][2] += (rouge_scores["rouge-1"]["r"] - ROUGE_SCORE_RUNNING_AVG[0][2])/count
-        ROUGE_SCORE_RUNNING_AVG[1][0] += (rouge_scores["rouge-2"]["f"] - ROUGE_SCORE_RUNNING_AVG[1][0])/count
-        ROUGE_SCORE_RUNNING_AVG[1][1] += (rouge_scores["rouge-2"]["p"] - ROUGE_SCORE_RUNNING_AVG[1][1])/count
-        ROUGE_SCORE_RUNNING_AVG[1][2] += (rouge_scores["rouge-2"]["r"] - ROUGE_SCORE_RUNNING_AVG[1][2])/count
-        ROUGE_SCORE_RUNNING_AVG[2][0] += (rouge_scores["rouge-l"]["f"] - ROUGE_SCORE_RUNNING_AVG[2][0])/count
-        ROUGE_SCORE_RUNNING_AVG[2][1] += (rouge_scores["rouge-l"]["p"] - ROUGE_SCORE_RUNNING_AVG[2][1])/count
-        ROUGE_SCORE_RUNNING_AVG[2][2] += (rouge_scores["rouge-l"]["r"] - ROUGE_SCORE_RUNNING_AVG[2][2])/count
-        
-        score_log1.set_description_str("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f} || Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f} || Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2], f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2], f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
-        #score_log4.set_description_str("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
-#b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
-"""
+    
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'):
@@ -625,7 +592,7 @@ def main():
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv', encoding = "latin-1")
     
     #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
-    df_test_trimmed = df_test_trimmed[:10]
+    df_test_trimmed = df_test_trimmed[:100]
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
     
@@ -656,13 +623,10 @@ def main():
         devices = 1
     )
     
-    #prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
+    prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
     #print("prediction: ", prediction)
-    #get_rouge_and_bleu_scores(prediction, df_test_trimmed)
-    for i in range (10):
-        df_train_trimmed['article'].iloc[i] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
-        df_train_trimmed['highlights'].iloc[i] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents. Extractive and abstractive summarisation involves selecting key sentences from the original document."
-    prediction = trainer.test(model=trained_model, datamodule=data_module)
+    get_rouge_and_bleu_scores(prediction, df_test_trimmed)
+    
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
     input_ids = tokenizer.encode(text, return_tensors='pt')
