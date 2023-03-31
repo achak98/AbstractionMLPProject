@@ -269,9 +269,14 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels
             #batch_size=batch_size
         )
-
+    
         self.log("test_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
         return loss
+
+    def predict_step(self, batch, batch_size):
+        print(batch.keys())
+        loss,y_pred= self(x)
+        return y_pred.softmax(dim=-1)
 
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
