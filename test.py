@@ -507,7 +507,7 @@ def main():
     data_module = NewsSummaryDataModuleTest(df_test_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
     
     trained_model = NewsSummaryModel.load_from_checkpoint(
-        checkpoint_path="baseline/checkpoints/best-checkpoint.ckpt"
+        checkpoint_path="stopwords/checkpoints/best-checkpoint.ckpt"
     )
     trained_model.freeze()
     
@@ -533,7 +533,7 @@ def main():
     #print("prediction: ", prediction)
     get_rouge_and_bleu_scores(prediction, df_test_trimmed)
     
-    #text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
+    text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
     input_ids = tokenizer.encode(text, return_tensors='pt')
     
