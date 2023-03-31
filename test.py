@@ -286,9 +286,14 @@ class NewsSummaryModel(pl.LightningModule):
         preds = []
         for i in range(len(generated_ids['sequences'])):
             genid = generated_ids['sequences'][i]
-            print("generated_ids['sequences'][i][0]: ", generated_ids['sequences'][i])
-            tokenizer.decode(genid, skip_special_tokens=True)
-            preds.append(tokenizer)
+            
+            pred = [
+                tokenizer.decode(id, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+                for id in genid
+            ]
+            print("welp1: ", tokenizer.decode(genid, skip_special_tokens=True))
+            print("welp2: ", pred)
+            preds.append("".join(pred))
         return preds
 
 
