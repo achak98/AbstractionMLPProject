@@ -215,7 +215,7 @@ class NewsSummaryModel(pl.LightningModule):
             summary_attention = summary_attention.detach().cpu().numpy()
             for i in range (len(summary_attention[0][0])):
                 for j in range (len(summary_attention[0][0][i])):
-                summary_attention_average[0][0][i][j] += summary_attention[0][0][i][j]
+                    summary_attention_average[0][0][i][j] += summary_attention[0][0][i][j]
             
             
 	    # Plot the heatmap
