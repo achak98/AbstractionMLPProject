@@ -175,7 +175,7 @@ class NewsSummaryModel(pl.LightningModule):
             decoder_attention_mask=decoder_attention_mask
         )
         
-        print(type(output).__name__)
+        print(output.keys())
 
         return output.loss, output.logits
 
