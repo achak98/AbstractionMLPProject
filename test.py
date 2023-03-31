@@ -223,14 +223,14 @@ class NewsSummaryModel(pl.LightningModule):
 
         text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids'].cuda()
         print("22222222")
-        summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
-        last_layer_attention_cross = output['cross_attentions'][-1]
-        last_layer_attention_enc = output['encoder_attentions'][-1]
-        last_layer_attention_dec = output['decoder_attentions'][-1]
+        summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids'].cuda()
+        last_layer_attention_cross = output['cross_attentions'][-1].cuda()
+        last_layer_attention_enc = output['encoder_attentions'][-1].cuda()
+        last_layer_attention_dec = output['decoder_attentions'][-1].cuda()
         print("3333333")
-        summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):]
-        summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):]
-        summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):]
+        summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):].cuda()
+        summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):].cuda()
+        summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):].cuda()
         # Sum the attention scores across the heads and normalize them
         summary_attention_cross = summary_attention_cross.sum(dim=1, keepdim =True)
         summary_attention_cross /= summary_attention_cross.sum(dim=-1, keepdim=True)
@@ -322,7 +322,7 @@ class NewsSummaryModel(pl.LightningModule):
         plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
         print("dec done")
         
-        exit()
+        
         return output.loss, output.logits
 
     def training_step(self, batch, batch_size):
