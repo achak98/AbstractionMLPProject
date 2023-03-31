@@ -270,7 +270,7 @@ class NewsSummaryModel(pl.LightningModule):
         #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
         plt.savefig('baseline/heatmap_cross.pdf', format='pdf', dpi=300, bbox_inches='tight')
         print("cross done")
-        
+        """
         sns.set(style='whitegrid', font_scale=1)
         rcParams['figure.figsize'] = 80, 40
         rc('font')
@@ -321,7 +321,7 @@ class NewsSummaryModel(pl.LightningModule):
         # Save the plot in a pdf file
         plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
         print("dec done")
-        
+        """
         
         return output.loss, output.logits
 
