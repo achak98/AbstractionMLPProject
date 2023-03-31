@@ -291,8 +291,7 @@ class NewsSummaryModel(pl.LightningModule):
                 tokenizer.decode(id, skip_special_tokens=True, clean_up_tokenization_spaces=True)
                 for id in genid
             ]
-            string = "".join(pred)
-            preds.append(string)
+            preds.append("".join(pred))
         return preds
 
 
