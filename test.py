@@ -415,8 +415,14 @@ def main():
     #print("size of summary_input_ids: ", sum
 
     #trained_model.generate_attention_map(text_input_ids, summary_input_ids, text, model_summary)
-    
-    trainer.test(model=model, dataloaders=data_module)
+    trainer = pl.Trainer(
+        logger=logger,
+        callbacks=[checkpoint_callback],
+        max_epochs=N_EPOCHS,
+        accelerator = 'gpu',
+        devices = 2
+    )
+    trainer.test(model=trained_model, dataloaders=data_module)
     #get_rouge_and_bleu_scores(trained_model, df_test_trimmed)
     
 if __name__ == "__main__":
