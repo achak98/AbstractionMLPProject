@@ -250,7 +250,7 @@ class NewsSummaryModel(pl.LightningModule):
         summary_attention_dec = summary_attention_dec.detach().cpu().numpy()
         
         
-        if(summary_attention_cross[0][0][0] > 0):
+        if(summary_attention_cross.any() > 0):
             sns.set(style='whitegrid', font_scale=1)
             rcParams['figure.figsize'] = 80, 40
             rc('font')
@@ -275,7 +275,7 @@ class NewsSummaryModel(pl.LightningModule):
             plt.savefig('baseline/heatmap_cross.pdf', format='pdf', dpi=300, bbox_inches='tight')
             print("cross done")
         
-        if(summary_attention_enc[0][0][0] > 0):
+        if(summary_attention_enc.any() > 0):
             sns.set(style='whitegrid', font_scale=1)
             rcParams['figure.figsize'] = 80, 40
             rc('font')
@@ -300,7 +300,7 @@ class NewsSummaryModel(pl.LightningModule):
             plt.savefig('baseline/heatmap_enc.pdf', format='pdf', dpi=300, bbox_inches='tight')
             print("enc done")
         
-        if(summary_attention_dec[0][0][0] > 0):
+        if(summary_attention_dec.any() > 0):
             sns.set(style='whitegrid', font_scale=1)
             rcParams['figure.figsize'] = 80, 40
             rc('font')
