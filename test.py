@@ -12,21 +12,22 @@ from sklearn.model_selection import train_test_split
 from termcolor import colored
 import textwrap
 from gensim.parsing.preprocessing import remove_stopwords, preprocess_string, strip_multiple_whitespaces, stem_text, strip_non_alphanum
-import shap
 import transformers
 from transformers import (
     AdamW,
     T5ForConditionalGeneration,
     T5TokenizerFast as T5Tokenizer,
     AutoTokenizer,
-    ZeroShotClassificationPipeline
+    Pipeline
 )
 
 from tqdm.auto import tqdm
 from rouge import Rouge
 from nltk.translate.bleu_score import sentence_bleu
-from typing import Union, List
-
+import seaborn as sns
+from pylab import rcParams
+import matplotlib.pyplot as plt
+from matplotlib import rc
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -109,7 +110,7 @@ class NewsSummaryDataModule(pl.LightningDataModule):
 class NewsSummaryModel(pl.LightningModule):
     def __init__(self):
         super().__init__()
-        self.model = T5ForConditionalGeneration.from_pretrained(FT_MODEL_NAME, return_dict=True, output_attentions = True, return_dict_in_generate=True)
+        self.model = T5ForConditionalGeneration.from_pretrained(FT_MODEL_NAME, output_attentions = True, return_dict_in_generate=True)
     
     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
         output = self.model(
@@ -178,7 +179,7 @@ class NewsSummaryModel(pl.LightningModule):
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
     
-    def generate_attention_map(self, text_input_ids, summary_input_ids):
+    def generate_attention_map(self, text_input_ids, summary_input_ids, text, model_summary):
         # Set the model to evaluation mode
         self.model.eval()
 
@@ -186,21 +187,21 @@ class NewsSummaryModel(pl.LightningModule):
         output = self.model.generate(
 	        input_ids=text_input_ids,
 	        attention_mask=(text_input_ids != tokenizer.pad_token_id),
-                max_length=100, 
-                num_beams=4, 
-                early_stopping=True
 	    )
 
         #print("output: ",output)
         print("output['sequences'] shape: ",output['sequences'].size()) 
         print("output output type: ", type(output).__name__)
         # Get the attention scores from the last layer of the decoder
-        print("type of output['decoder_attentions'][-1]: ", type(output['decoder_attentions'][-1]).__name__)
-        print("type of output['decoder_attentions'][-1][-1]: ", type(output['decoder_attentions'][-1][-1]).__name__)
-        last_layer_attention = output['decoder_attentions'][-1]
+        print("type of output['decoder_attentions'][-1]: ", type(output['encoder_attentions'][-1]).__name__)
+        print("type of output['decoder_attentions'][-1]: ", len(output['encoder_attentions'][-1]))
+        print("type of output['decoder_attentions'][-1][-1]: ", output['encoder_attentions'][-1][-1].size())
+        last_layer_attention = output['encoder_attentions'][-1]
+        print("summary_input_ids : ", summary_input_ids)
+        print("summary_input_ids : ", summary_input_ids)
         print("shape of last_layer_attention: ", len(last_layer_attention))
         # Reshape the attention scores to match the output shape
-        last_layer_attention = torch.stack(list(last_layer_attention), dim=0)
+        #last_layer_attention = torch.stack(list(last_layer_attention), dim=0)
         #last_layer_attention = last_layer_attention.squeeze(0)
         #last_layer_attention = last_layer_attention.view(
 	#        output['sequences'].size(0),
@@ -208,34 +209,36 @@ class NewsSummaryModel(pl.LightningModule):
 	#        -1,
 	#        output['sequences'].size(-1)
 	#    )
-        last_layer_attention
         # Compute the attention scores for the summary tokens
         summary_attention = last_layer_attention[:, :, -len(summary_input_ids[0]):, :]
 
         # Sum the attention scores across the heads and normalize them
-        summary_attention = summary_attention.sum(dim=1)
+        summary_attention = summary_attention.sum(dim=1, keepdim =True)
         summary_attention /= summary_attention.sum(dim=-1, keepdim=True)
 	
 	    # Convert the attention scores to a numpy array
         summary_attention = summary_attention.detach().cpu().numpy()
-        print("summary_attention: ", summary_attention)
         print("summary_attention: ", summary_attention.size)
 	    # Plot the heatmap
-        sa = summary_attention[0].squeeze()
-        print("summary_attention[0].squeeze(): ", sa.size())
-        print("shize tokenizer.decode(summary_input_ids[0]): ", tokenizer.decode(summary_input_ids[0]).size())
-        sns.set(style='whitegrid', font_scale=1.2)
-        rcParams['figure.figsize'] = 8, 4
-        rc('font', weight='bold')
-        ax = sns.heatmap(sa, cmap='YlGnBu', annot=True, fmt='.2f', cbar=False)
-        ax.set_xticklabels(tokenizer.decode(summary_input_ids[0]).split(), rotation=90, fontsize=12)
-        ax.set_yticklabels([''])
-        ax.set_xlabel('Summary Tokens', fontsize=12, fontweight='bold')
-        ax.set_ylabel('')
-        ax.set_title('Attention Heatmap', fontsize=16, fontweight='bold')
+        sns.set(style='whitegrid', font_scale=1)
+        rcParams['figure.figsize'] = 80, 40
+        rc('font')
+        summary_attention = summary_attention.squeeze(0)
+        x = [tokenizer.decode(token) for token in text_input_ids[0]]
+        y = [tokenizer.decode(token) for token in summary_input_ids[0]]
+        sns.set(font_scale=2.1)
+        ax = sns.heatmap(summary_attention[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
+        ax.set_xticklabels(x, rotation=90, fontsize=40)
+        ax.set_yticklabels(y, rotation=0, fontsize=40)
+        ax.set_xticks(np.arange(len(x))+0.5)
+        ax.set_yticks(np.arange(len(y))+0.5)
+        #ax.set_yticklabels([''])
+        ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
+        ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
+        #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
 
 		# Save the plot in a pdf file
-        plt.savefig('baseline/heatmap.pdf', format='pdf', dpi=300, bbox_inches='tight')
+        plt.savefig('stopwords/heatmap.pdf', format='pdf', dpi=300, bbox_inches='tight')
         
 def summarizeText(trained_model, text):
     text_encoding = tokenizer(
@@ -385,9 +388,11 @@ def main():
         checkpoint_path="baseline/checkpoints/best-checkpoint.ckpt"
     )
     trained_model.freeze()
+    
 
     sample_row = df_test_trimmed.sample(n=1).iloc[0]
-    text = sample_row['article']
+    #text = sample_row['article']
+    text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
     input_ids = tokenizer.encode(text, return_tensors='pt')
     print("trained model type: ", type(trained_model).__name__)
@@ -398,7 +403,7 @@ def main():
     print("output seq shape: ", outputs['sequences'].size())
     model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
-    #print("Original Text: ", text)
+    print("Original Text: ", text)
     print("Generated Summary: ", model_summary)
 
     text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
@@ -406,7 +411,7 @@ def main():
     summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
     #print("size of summary_input_ids: ", sum
 
-    trained_model.generate_attention_map(text_input_ids, summary_input_ids)
+    trained_model.generate_attention_map(text_input_ids, summary_input_ids, text, model_summary)
 
     get_rouge_and_bleu_scores(trained_model, df_test_trimmed)
     
