@@ -283,7 +283,7 @@ class NewsSummaryModel(pl.LightningModule):
             length_penalty=1.0,
             early_stopping=True
         )
-        print(generated_ids.shape())
+        print(generated_ids['sequences'].shape())
         preds = [
                 tokenizer.decode(gen_id, skip_special_tokens=True, clean_up_tokenization_spaces=True)
                 for gen_id in generated_ids['sequences']
