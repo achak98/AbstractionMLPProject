@@ -164,7 +164,7 @@ class NewsSummaryModel(pl.LightningModule):
         labels = batch['labels']
         labels_attention_mask = batch['labels_attention_mask']
         self.batch_size = batch_size
-        
+        print(tokenizer.decode(outputs[0]))
         loss, outputs = self(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -414,8 +414,9 @@ def main():
     summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
     #print("size of summary_input_ids: ", sum
 
-    trained_model.generate_attention_map(text_input_ids, summary_input_ids, text, model_summary)
-
+    #trained_model.generate_attention_map(text_input_ids, summary_input_ids, text, model_summary)
+    
+    trainer.test(model=model, dataloaders=data_module)
     #get_rouge_and_bleu_scores(trained_model, df_test_trimmed)
     
 if __name__ == "__main__":
