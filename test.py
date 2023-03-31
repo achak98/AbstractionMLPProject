@@ -214,8 +214,19 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels,
             decoder_attention_mask=decoder_attention_mask
         )
-        
-        print(output['cross_attentions'][-1].size())
+        print(output.keys())
+        text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
+        input_ids = tokenizer.encode(text, return_tensors='pt')
+        outputs = trained_model.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
+        model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
+
+        text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
+    
+        summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
+        last_layer_attention_cross = output['cross_attentions'][-1]
+        last_layer_attention_enc = output['encoder_attentions'][-1]
+        last_layer_attention_dec = output['decoder_attentions'][-1]
+        summary_attention = last_layer_attention[:, :, -len(summary_input_ids[0]):, :]
 
         return output.loss, output.logits
 
@@ -499,8 +510,8 @@ def main():
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_no_stem.csv', encoding = "latin-1")
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv', encoding = "latin-1")
     
-    df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
-    df_test_trimmed = df_test_trimmed[:4000]
+    #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
+    df_test_trimmed = df_test_trimmed[0]
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
     
@@ -509,7 +520,7 @@ def main():
     data_module = NewsSummaryDataModuleTest(df_test_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
     
     trained_model = NewsSummaryModel.load_from_checkpoint(
-        checkpoint_path="stem/checkpoints/best-checkpoint-v1.ckpt"
+        checkpoint_path="baseline/checkpoints/best-checkpoint.ckpt"
     )
     trained_model.freeze()
     
@@ -533,8 +544,9 @@ def main():
     
     prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
     #print("prediction: ", prediction)
-    get_rouge_and_bleu_scores(prediction, df_test_trimmed)
-    
+    #get_rouge_and_bleu_scores(prediction, df_test_trimmed)
+    df_train_trimmed['article'].iloc[0] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
+    prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
     input_ids = tokenizer.encode(text, return_tensors='pt')
