@@ -283,7 +283,6 @@ class NewsSummaryModel(pl.LightningModule):
             length_penalty=1.0,
             early_stopping=True
         )
-        pred = []
         preds = []
         for i in range(len(generated_ids['sequences'])):
             genid = generated_ids['sequences'][i][0]
