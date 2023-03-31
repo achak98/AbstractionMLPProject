@@ -221,16 +221,33 @@ class NewsSummaryModel(pl.LightningModule):
         outputs = self.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
         model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
-        text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids'].cuda()
+        text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
         print("22222222")
-        summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids'].cuda()
-        last_layer_attention_cross = output['cross_attentions'][-1].cuda()
-        last_layer_attention_enc = output['encoder_attentions'][-1].cuda()
-        last_layer_attention_dec = output['decoder_attentions'][-1].cuda()
-        summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, :].cuda()
-        summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, :].cuda()
-        summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, :].cuda()
-        print("3333333")
+        summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
+        last_layer_attention_cross = output['cross_attentions'][-1]
+        last_layer_attention_enc = output['encoder_attentions'][-1]
+        last_layer_attention_dec = output['decoder_attentions'][-1]
+        last_layer_attention_cross = last_layer_attention_cross.view(
+            output['sequences'].size(0),
+            self.model.config.num_heads,
+            -1,
+            output['sequences'].size(-1)
+        )
+        last_layer_attention_enc = last_layer_attention_enc.view(
+            output['sequences'].size(0),
+            self.model.config.num_heads,
+            -1,
+            output['sequences'].size(-1)
+        )
+        last_layer_attention_dec = last_layer_attention_dec.view(
+            output['sequences'].size(0),
+            self.model.config.num_heads,
+            -1,
+            output['sequences'].size(-1)
+        )
+        summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, :]
+        summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, :]
+        summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, :]
         # Sum the attention scores across the heads and normalize them
         summary_attention_cross = summary_attention_cross.sum(dim=1, keepdim =True)
         summary_attention_cross /= summary_attention_cross.sum(dim=-1, keepdim=True)
