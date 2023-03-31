@@ -283,12 +283,16 @@ class NewsSummaryModel(pl.LightningModule):
             length_penalty=1.0,
             early_stopping=True
         )
-        print(generated_ids['sequences'][0])
-        preds = [
+        pred = [].cuda()
+        preds = [].cuda()
+        for i in range(len(generated_ids['sequences'])):
+            genid = generated_ids['sequences'][i][0]
+            pred = [
                 tokenizer.decode(gen_id, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-                for gen_id in generated_ids['sequences']
-        ]
-        return "".join(preds)
+                for id in genid
+            ]
+            preds.append("".join(pred))
+        return preds
 
 
     def configure_optimizers(self):
@@ -532,7 +536,7 @@ def main():
     )
     
     prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
-    print("prediction: ",prediction)
+    print("prediction: ",prediction.size())
     get_rouge_and_bleu_scores(prediction, df_test_trimmed)
     
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
