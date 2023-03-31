@@ -228,29 +228,9 @@ class NewsSummaryModel(pl.LightningModule):
         last_layer_attention_enc = output['encoder_attentions'][-1]
         last_layer_attention_dec = output['decoder_attentions'][-1]
         print("3333333")
-        last_layer_attention_cross = last_layer_attention_cross.view(
-            output['sequences'].size(0),
-            self.model.config.num_heads,
-            -1,
-            output['sequences'].size(-1)
-        )
-        print("4444444")
-        last_layer_attention_enc = last_layer_attention_enc.view(
-            output['sequences'].size(0),
-            self.model.config.num_heads,
-            -1,
-            output['sequences'].size(-1)
-        )
-        print("555555")
-        last_layer_attention_dec = last_layer_attention_dec.view(
-            output['sequences'].size(0),
-            self.model.config.num_heads,
-            -1,
-            output['sequences'].size(-1)
-        )
-        summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, :]
-        summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, :]
-        summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, :]
+        summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):]
+        summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):]
+        summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, -len(text_input_ids[0]):]
         # Sum the attention scores across the heads and normalize them
         summary_attention_cross = summary_attention_cross.sum(dim=1, keepdim =True)
         summary_attention_cross /= summary_attention_cross.sum(dim=-1, keepdim=True)
