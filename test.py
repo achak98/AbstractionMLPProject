@@ -189,56 +189,53 @@ class NewsSummaryModel(pl.LightningModule):
 	        attention_mask=(text_input_ids != tokenizer.pad_token_id),
 	    )
 
-        #print("output: ",output)
-        print("output['sequences'] shape: ",output['sequences'].size()) 
-        print("output output type: ", type(output).__name__)
-        # Get the attention scores from the last layer of the decoder
-        print("type of output['decoder_attentions'][-1]: ", type(output['encoder_attentions'][-1]).__name__)
-        print("type of output['decoder_attentions'][-1]: ", len(output['encoder_attentions'][-1]))
-        print("type of output['decoder_attentions'][-1][-1]: ", output['encoder_attentions'][-1][-1].size())
-        last_layer_attention = output['encoder_attentions'][-1]
-        print("summary_input_ids : ", summary_input_ids)
-        print("summary_input_ids : ", summary_input_ids)
-        print("shape of last_layer_attention: ", len(last_layer_attention))
-        # Reshape the attention scores to match the output shape
-        #last_layer_attention = torch.stack(list(last_layer_attention), dim=0)
-        #last_layer_attention = last_layer_attention.squeeze(0)
-        #last_layer_attention = last_layer_attention.view(
-	#        output['sequences'].size(0),
-	#        self.model.config.num_heads,
-	#        -1,
-	#        output['sequences'].size(-1)
-	#    )
-        # Compute the attention scores for the summary tokens
-        summary_attention = last_layer_attention[:, :, -len(summary_input_ids[0]):, :]
+        
+        summary_attention_average = np.zeros((len(text_input_ids[0]),len(summary_input_ids[0])))
+        for tuple_gen_token in tqdm(range(len(output['cross_attentions'])), desc = 'Processing Attention heatmap')::
+            # Get the attention scores from the last layer of the decoder
+            last_layer_attention = tuple_gen_token[-1] #(batch_size, num_heads, generated_length, sequence_length).
+            
+            # Reshape the attention scores to match the output shape
+            #last_layer_attention = torch.stack(list(last_layer_attention), dim=0)
+            #last_layer_attention = last_layer_attention.squeeze(0)
+            #last_layer_attention = last_layer_attention.view(
+        #        output['sequences'].size(0),
+        #        self.model.config.num_heads,
+        #        -1,
+        #        output['sequences'].size(-1)
+        #    )
+            # Compute the attention scores for the summary tokens
+            summary_attention = last_layer_attention[:, :, -len(summary_input_ids[0]):, :]
 
-        # Sum the attention scores across the heads and normalize them
-        summary_attention = summary_attention.sum(dim=1, keepdim =True)
-        summary_attention /= summary_attention.sum(dim=-1, keepdim=True)
-	
-	    # Convert the attention scores to a numpy array
-        summary_attention = summary_attention.detach().cpu().numpy()
-        print("summary_attention: ", summary_attention.size)
+            # Sum the attention scores across the heads and normalize them
+            summary_attention = summary_attention.sum(dim=1, keepdim =True)
+            summary_attention /= summary_attention.sum(dim=-1, keepdim=True)
+        
+            # Convert the attention scores to a numpy array
+            summary_attention = summary_attention.detach().cpu().numpy()
+            summary_attention_average += summary_attention
+            
+            
 	    # Plot the heatmap
         sns.set(style='whitegrid', font_scale=1)
         rcParams['figure.figsize'] = 80, 40
         rc('font')
-        summary_attention = summary_attention.squeeze(0)
-        x = [tokenizer.decode(token) for token in text_input_ids[0]]
-        y = [tokenizer.decode(token) for token in summary_input_ids[0]]
+        summary_attention_average = summary_attention_average.squeeze(0)
+        x = [tokenizer.decode(token) for token in summary_input_ids[0]]
+        y = [tokenizer.decode(token) for token in text_input_ids[0]]
         sns.set(font_scale=2.1)
-        ax = sns.heatmap(summary_attention[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
+        ax = sns.heatmap(summary_attention_average[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
         ax.set_xticklabels(x, rotation=90, fontsize=40)
         ax.set_yticklabels(y, rotation=0, fontsize=40)
         ax.set_xticks(np.arange(len(x))+0.5)
         ax.set_yticks(np.arange(len(y))+0.5)
         #ax.set_yticklabels([''])
-        ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
-        ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
+        ax.set_xlabel('Output Tokens', fontsize=60, fontweight='bold')
+        ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
         #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
 
 		# Save the plot in a pdf file
-        plt.savefig('stopwords/heatmap.pdf', format='pdf', dpi=300, bbox_inches='tight')
+        plt.savefig('baseline/heatmap.pdf', format='pdf', dpi=300, bbox_inches='tight')
         
 def summarizeText(trained_model, text):
     text_encoding = tokenizer(
@@ -269,18 +266,17 @@ def summarizeText(trained_model, text):
 def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
     rouge = Rouge()
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
-    bleu_scores = np.zeros((5), dtype = float) # 0 -> indiv 1-gram, 1 -> indiv 2-gram ... 3 -> indiv 4-gram, 4 -> cumul 4-gram
     count = 0
     score_log1 = tqdm(total=0, position=1, bar_format='{desc}')
-    score_log2 = tqdm(total=0, position=1, bar_format='{desc}')
-    score_log3 = tqdm(total=0, position=1, bar_format='{desc}')
-    score_log4 = tqdm(total=0, position=1, bar_format='{desc}')
-    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing Rouge and BLEU scores'):
+
+    
+    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing Rouge scores'):
         stuff = df_test_trimmed['article'].iloc[itr]
         what_stuffs_supposed_to_be = df_test_trimmed['highlights'].iloc[itr]
         count+=1
         model_summary = summarizeText(trained_model, stuff)
         rouge_scores = rouge.get_scores(model_summary, what_stuffs_supposed_to_be)
+        """
         splitted_highlights = what_stuffs_supposed_to_be.split()
         splitted_inference = model_summary.split()
         bleu_scores[0] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (1,0,0,0)) - bleu_scores[0])/count
@@ -288,7 +284,7 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
         bleu_scores[2] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,1,0)) - bleu_scores[2])/count
         bleu_scores[3] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,0,1)) - bleu_scores[3])/count
         bleu_scores[4] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0.25,0.25,0.25,0.25)) - bleu_scores[4])/count
-       
+       """
         rouge_scores = rouge_scores[0]
         ROUGE_SCORE_RUNNING_AVG[0][0] += (rouge_scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
         ROUGE_SCORE_RUNNING_AVG[0][1] += (rouge_scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
@@ -300,11 +296,9 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
         ROUGE_SCORE_RUNNING_AVG[2][1] += (rouge_scores["rouge-l"]["p"] - ROUGE_SCORE_RUNNING_AVG[2][1])/count
         ROUGE_SCORE_RUNNING_AVG[2][2] += (rouge_scores["rouge-l"]["r"] - ROUGE_SCORE_RUNNING_AVG[2][2])/count
         
-        score_log1.set_description_str("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2]))
-        score_log2.set_description_str("Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f}".format(f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2]))
-        score_log3.set_description_str("Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
-        score_log4.set_description_str("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
-b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
+        score_log1.set_description_str("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f} || Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f} || Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2], f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2], f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
+        #score_log4.set_description_str("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
+#b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
 
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
