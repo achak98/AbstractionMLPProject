@@ -33,7 +33,7 @@ import warnings
 warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
-BATCH_SIZE = 4
+BATCH_SIZE = 2
 NO_OF_WORKERS = 0
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
@@ -286,6 +286,7 @@ class NewsSummaryModel(pl.LightningModule):
         preds = []
         for i in range(len(generated_ids['sequences'])):
             genid = generated_ids['sequences'][i][0]
+            print("generated_ids['sequences'][i][0]: ", generated_ids['sequences'][i][0])
             pred = [
                 tokenizer.decode(gen_id, skip_special_tokens=True, clean_up_tokenization_spaces=True)
                 for id in genid
@@ -494,7 +495,7 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
     
-    df_test_trimmed = df_test_trimmed[:8]
+    df_test_trimmed = df_test_trimmed[:3]
     #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_stopwords.csv', encoding = "latin-1")
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_stopwords.csv', encoding = "latin-1")
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv', encoding = "latin-1")
@@ -535,7 +536,7 @@ def main():
     )
     
     prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
-    print("prediction: ",prediction)
+    print("prediction: ",prediction.size())
     get_rouge_and_bleu_scores(prediction, df_test_trimmed)
     
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
