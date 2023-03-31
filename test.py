@@ -39,7 +39,7 @@ MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
 
-predicted = []
+generating_heatmap = False
 
 class NewsSummaryDataset(Dataset):
     def __init__(
@@ -329,7 +329,7 @@ def summarizeText(trained_model, text):
     ]
     return "".join(preds)
 
-def get_rouge_and_bleu_scores (df_test_trimmed):
+def get_rouge_and_bleu_scores (prediction, df_test_trimmed):
     rouge = Rouge()
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     count = 0
@@ -337,7 +337,7 @@ def get_rouge_and_bleu_scores (df_test_trimmed):
     target = []
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing target'):
         target.append(df_test_trimmed['highlights'].iloc[itr])
-    rouge_scores = rouge.get_scores(predicted, target)
+    rouge_scores = rouge.get_scores(prediction, target)
     print(rouge_scores)
     """
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing Rouge scores'):
@@ -470,8 +470,8 @@ def main():
         accelerator = 'gpu',
         devices = 2
     )
-    trainer.test(model=trained_model, dataloaders=data_module)
-    get_rouge_and_bleu_scores(df_test_trimmed)
+    prediction = trained_model(df_test_trimmed['article'])
+    get_rouge_and_bleu_scores(prediction, df_test_trimmed)
     
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
