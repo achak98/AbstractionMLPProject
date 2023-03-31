@@ -221,24 +221,27 @@ class NewsSummaryModel(pl.LightningModule):
         outputs = self.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
         model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
-        text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
+        text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids'].cuda()
         print("22222222")
         summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
         last_layer_attention_cross = output['cross_attentions'][-1]
         last_layer_attention_enc = output['encoder_attentions'][-1]
         last_layer_attention_dec = output['decoder_attentions'][-1]
+        print("3333333")
         last_layer_attention_cross = last_layer_attention_cross.view(
             output['sequences'].size(0),
             self.model.config.num_heads,
             -1,
             output['sequences'].size(-1)
         )
+        print("4444444")
         last_layer_attention_enc = last_layer_attention_enc.view(
             output['sequences'].size(0),
             self.model.config.num_heads,
             -1,
             output['sequences'].size(-1)
         )
+        print("555555")
         last_layer_attention_dec = last_layer_attention_dec.view(
             output['sequences'].size(0),
             self.model.config.num_heads,
@@ -287,12 +290,15 @@ class NewsSummaryModel(pl.LightningModule):
         ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
         #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
         plt.savefig('baseline/heatmap_cross.pdf', format='pdf', dpi=300, bbox_inches='tight')
+        print("cross done")
         ax = sns.heatmap(summary_attention_enc[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
         plt.savefig('baseline/heatmap_enc.pdf', format='pdf', dpi=300, bbox_inches='tight')
+        print("enc done")
+        
         ax = sns.heatmap(summary_attention_dec[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
         # Save the plot in a pdf file
         plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
-        print("done")
+        print("dec done")
 
         return output.loss, output.logits
 
