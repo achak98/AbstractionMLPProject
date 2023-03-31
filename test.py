@@ -392,7 +392,8 @@ class NewsSummaryModel(pl.LightningModule):
             decoder_attention_mask=labels_attention_mask,
             labels=labels
             #batch_size=batch_size
-        )"""
+        )
+        """
         generated_ids = self.model.generate(
             input_ids=batch['text_input_ids'],
             attention_mask=batch['text_attention_mask'],
