@@ -456,23 +456,11 @@ def main():
 
     sample_row = df_test_trimmed.sample(n=1).iloc[0]
     #text = sample_row['article']
-    text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
+    
 
-    input_ids = tokenizer.encode(text, return_tensors='pt')
+    #text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
     
-    
-    outputs = trained_model.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
-    print("output: ",outputs.keys())
-    
-    print("output seq shape: ", outputs['sequences'].size())
-    model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
-
-    print("Original Text: ", text)
-    print("Generated Summary: ", model_summary)
-
-    text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
-    
-    summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
+    #summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
     #print("size of summary_input_ids: ", sum
     logger = TensorBoardLogger("lightning_logs", name='news-summary')
     #trained_model.generate_attention_map(text_input_ids, summary_input_ids, text, model_summary)
@@ -484,6 +472,20 @@ def main():
     )
     trainer.test(model=trained_model, dataloaders=data_module)
     get_rouge_and_bleu_scores(df_test_trimmed)
+    
+    text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
+
+    input_ids = tokenizer.encode(text, return_tensors='pt')
+    
+    
+    outputs = trained_model.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
+    #print("output: ",outputs.keys())
+    
+    #print("output seq shape: ", outputs['sequences'].size())
+    model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
+
+    print("Original Text: ", text)
+    print("Generated Summary: ", model_summary)
     
 if __name__ == "__main__":
         main()
