@@ -325,7 +325,7 @@ class NewsSummaryModel(pl.LightningModule):
         plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
         print("dec done")
         
-        if(summary_attention_enc[0][0][0][0] > 0):
+        if(summary_attention_enc[0][0][0] > 0):
             exit()
         
         return output.loss, output.logits
