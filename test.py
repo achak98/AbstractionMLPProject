@@ -526,7 +526,7 @@ def main():
         logger=logger,
         max_epochs=N_EPOCHS,
         accelerator = 'gpu',
-        devices = 2
+        devices = 1
     )
     
     prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
