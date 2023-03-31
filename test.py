@@ -219,9 +219,7 @@ class NewsSummaryModel(pl.LightningModule):
         labels = batch['labels']
         labels_attention_mask = batch['labels_attention_mask']
         self.batch_size = batch_size
-        prediction = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
-        print(prediction)
-        predicted.append(prediction)
+
         loss, outputs = self(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -229,6 +227,10 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels
             #batch_size=batch_size
         )
+        
+        prediction = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
+        print(prediction)
+        predicted.append(prediction)
 
         self.log("test_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
         return loss
