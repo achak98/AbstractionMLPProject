@@ -189,7 +189,8 @@ class NewsSummaryModel(pl.LightningModule):
 	        attention_mask=(text_input_ids != tokenizer.pad_token_id),
 	    )
         print("output's class: ", type(output).__name__)
-        
+        print("input sequences length: ",text_input_ids[0])
+        print("output sequences length: ",summary_input_ids[0])
         summary_attention_average = np.zeros((1, 1, len(summary_input_ids[0]),len(text_input_ids[0])))
         print("no of gen tokens: ", len(output['cross_attentions']))
         print("no of decoder layers: ", len(output['cross_attentions'][0]))
