@@ -293,7 +293,7 @@ class NewsSummaryModel(pl.LightningModule):
             ]
             print("welp1: ", tokenizer.decode(genid, skip_special_tokens=True))
             print("welp2: ", pred)
-            preds.append("".join(pred))
+            preds.append(tokenizer.decode(genid, skip_special_tokens=True))
         return preds
 
 
