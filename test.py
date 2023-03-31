@@ -196,7 +196,7 @@ class NewsSummaryModel(pl.LightningModule):
         count = 0
         for tuple_gen_token in tqdm(output['cross_attentions'], desc = 'Processing Attention heatmap'):
             count+=1
-            print("float tensor shape for iteration {} : {}".format(count, (output['cross_attentions'][0].size())))
+            print("float tensor shape for iteration {} : {}".format(count, (tuple_gen_token[-1].size())))
             # Get the attention scores from the last layer of the decoder
             last_layer_attention = tuple_gen_token[-1] #(batch_size, num_heads, generated_length, sequence_length).
             
