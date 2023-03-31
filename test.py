@@ -413,7 +413,7 @@ def main():
     
     summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
     #print("size of summary_input_ids: ", sum
-
+    logger = TensorBoardLogger("lightning_logs", name='news-summary')
     #trained_model.generate_attention_map(text_input_ids, summary_input_ids, text, model_summary)
     trainer = pl.Trainer(
         logger=logger,
