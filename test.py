@@ -166,8 +166,6 @@ class NewsSummaryModel(pl.LightningModule):
     def __init__(self):
         super().__init__()
         self.model = T5ForConditionalGeneration.from_pretrained(FT_MODEL_NAME, output_attentions = True, return_dict_in_generate=True)
-        self.counter = 0
-        self.ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     
     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
         output = self.model(
@@ -231,25 +229,8 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels
             #batch_size=batch_size
         )
-        x, y = batch
-        pred = self.model(x)
-        
-        rouge = Rouge()
-        rouge_scores = rouge.get_scores(pred, y)
-        count+=1
-        rouge_scores = rouge_scores[0]
-        self.ROUGE_SCORE_RUNNING_AVG[0][0] += (rouge_scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
-        self.ROUGE_SCORE_RUNNING_AVG[0][1] += (rouge_scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
-        self.ROUGE_SCORE_RUNNING_AVG[0][2] += (rouge_scores["rouge-1"]["r"] - ROUGE_SCORE_RUNNING_AVG[0][2])/count
-        self.ROUGE_SCORE_RUNNING_AVG[1][0] += (rouge_scores["rouge-2"]["f"] - ROUGE_SCORE_RUNNING_AVG[1][0])/count
-        self.ROUGE_SCORE_RUNNING_AVG[1][1] += (rouge_scores["rouge-2"]["p"] - ROUGE_SCORE_RUNNING_AVG[1][1])/count
-        self.ROUGE_SCORE_RUNNING_AVG[1][2] += (rouge_scores["rouge-2"]["r"] - ROUGE_SCORE_RUNNING_AVG[1][2])/count
-        self.ROUGE_SCORE_RUNNING_AVG[2][0] += (rouge_scores["rouge-l"]["f"] - ROUGE_SCORE_RUNNING_AVG[2][0])/count
-        self.ROUGE_SCORE_RUNNING_AVG[2][1] += (rouge_scores["rouge-l"]["p"] - ROUGE_SCORE_RUNNING_AVG[2][1])/count
-        self.ROUGE_SCORE_RUNNING_AVG[2][2] += (rouge_scores["rouge-l"]["r"] - ROUGE_SCORE_RUNNING_AVG[2][2])/count
-        
-        
-        self.log("test_loss", loss, "ROUGE_SCORE_RUNNING_AVG", ROUGE_SCORE_RUNNING_AVG, prog_bar=True, logger=True, batch_size=batch_size)
+
+        self.log("test_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
         return loss
 
     def configure_optimizers(self):
@@ -490,7 +471,8 @@ def main():
         devices = 2
     )
     
-    trainer.test(model=trained_model, dataloaders=data_module)
+    prediction = trained_model(data_module)
+    get_rouge_and_bleu_scores(prediction, df_test_trimmed)
     
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
