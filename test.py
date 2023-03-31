@@ -597,8 +597,8 @@ def main():
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
     
 
-    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
-    #data_module = NewsSummaryDataModuleTest(df_test_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
+    #data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
+    data_module = NewsSummaryDataModuleTest(df_test_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
     
     trained_model = NewsSummaryModel.load_from_checkpoint(
         checkpoint_path="baseline/checkpoints/best-checkpoint.ckpt"
