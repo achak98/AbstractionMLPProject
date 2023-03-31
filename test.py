@@ -392,7 +392,7 @@ class NewsSummaryModel(pl.LightningModule):
             decoder_attention_mask=labels_attention_mask,
             labels=labels
             #batch_size=batch_size
-        )
+        )"""
         generated_ids = self.model.generate(
             input_ids=batch['text_input_ids'],
             attention_mask=batch['text_attention_mask'],
@@ -406,7 +406,8 @@ class NewsSummaryModel(pl.LightningModule):
         for i in range(len(generated_ids['sequences'])):
             genid = generated_ids['sequences'][i]
         return tokenizer.decode(genid, skip_special_tokens=True)
-
+        """
+        return ""
 
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
@@ -654,6 +655,7 @@ def main():
     #print("prediction: ", prediction)
     #get_rouge_and_bleu_scores(prediction, df_test_trimmed)
     df_train_trimmed['article'].iloc[0] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
+    df_train_trimmed['highlights'].iloc[0] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents. Extractive and abstractive summarisation involves selecting key sentences from the original document."
     prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
