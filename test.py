@@ -161,6 +161,46 @@ class NewsSummaryDataModule(pl.LightningDataModule):
             num_workers=NO_OF_WORKERS,
             persistent_workers=False
         )
+        
+class NewsSummaryDataModuleTest(pl.LightningDataModule):
+    def __init__(
+        self,
+        
+        test_df: pd.DataFrame,
+        
+        tokenizer: T5Tokenizer,
+        batch_size: int,
+        text_max_token_len: int = 1024,
+        summary_max_token_len: int = 256
+    ):
+        super().__init__()
+
+        
+        self.test_df = test_df
+        
+        self.batch_size = batch_size
+        self.tokenizer = tokenizer
+        self.text_max_token_len = text_max_token_len
+        self.summary_max_token_len = summary_max_token_len
+
+    def setup(self, stage=None):
+        
+        self.test_dataset = NewsSummaryDataset(
+            self.test_df,
+            self.tokenizer,
+            self.text_max_token_len,
+            self.summary_max_token_len
+        )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=NO_OF_WORKERS,
+            persistent_workers=False
+        )
+
 
 class NewsSummaryModel(pl.LightningModule):
     def __init__(self):
@@ -446,8 +486,9 @@ def main():
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
     
 
-    data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
-
+    #data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
+    data_module = NewsSummaryDataModuleTest(df_test_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
+    
     trained_model = NewsSummaryModel.load_from_checkpoint(
         checkpoint_path="baseline/checkpoints/best-checkpoint.ckpt"
     )
@@ -471,7 +512,7 @@ def main():
         devices = 2
     )
     
-    prediction = trainer.predict(model=model, dataloaders=data_module, return_predictions=True)
+    prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
     get_rouge_and_bleu_scores(prediction, df_test_trimmed)
     
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
