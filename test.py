@@ -214,14 +214,15 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels,
             decoder_attention_mask=decoder_attention_mask
         )
-        
+        print("0000000")
         text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
         input_ids = tokenizer.encode(text, return_tensors='pt')
+        print("11111111")
         outputs = self.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
         model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
         text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids']
-    
+        print("22222222")
         summary_input_ids = tokenizer.encode_plus(model_summary, return_tensors='pt')['input_ids']
         last_layer_attention_cross = output['cross_attentions'][-1]
         last_layer_attention_enc = output['encoder_attentions'][-1]
@@ -229,7 +230,7 @@ class NewsSummaryModel(pl.LightningModule):
         summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, :]
         summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, :]
         summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, :]
-
+        print("3333333")
         # Sum the attention scores across the heads and normalize them
         summary_attention_cross = summary_attention_cross.sum(dim=1, keepdim =True)
         summary_attention_cross /= summary_attention_cross.sum(dim=-1, keepdim=True)
