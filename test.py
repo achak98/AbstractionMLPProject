@@ -228,9 +228,10 @@ class NewsSummaryModel(pl.LightningModule):
             #batch_size=batch_size
         )
         
-        prediction = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-        print(prediction)
-        predicted.append(prediction)
+        for(output in outputs):
+            prediction = tokenizer.decode(output, skip_special_tokens=True)
+            print(prediction)
+            predicted.append(prediction)
 
         self.log("test_loss", loss, prog_bar=True, logger=True, batch_size=batch_size)
         return loss
