@@ -33,7 +33,7 @@ import warnings
 warnings.filterwarnings("ignore")
 torch.cuda.empty_cache()
 N_EPOCHS = 8
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 NO_OF_WORKERS = 0
 MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
@@ -286,15 +286,7 @@ class NewsSummaryModel(pl.LightningModule):
         preds = []
         for i in range(len(generated_ids['sequences'])):
             genid = generated_ids['sequences'][i]
-            
-            pred = [
-                tokenizer.decode(id, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-                for id in genid
-            ]
-            print("welp1: ", tokenizer.decode(genid, skip_special_tokens=True))
-            print("welp2: ", pred)
-            preds.extend(tokenizer.decode(genid, skip_special_tokens=True))
-        return preds
+        return tokenizer.decode(genid, skip_special_tokens=True)
 
 
     def configure_optimizers(self):
