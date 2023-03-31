@@ -219,7 +219,7 @@ class NewsSummaryModel(pl.LightningModule):
         input_ids = tokenizer.encode(text, return_tensors='pt').cuda()
         print("11111111")
         outputs = self.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
-        model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True).cuda()
+        model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
         text_input_ids = tokenizer.encode_plus(text, return_tensors='pt')['input_ids'].cuda()
         print("22222222")
