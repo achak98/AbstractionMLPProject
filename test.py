@@ -192,7 +192,7 @@ class NewsSummaryDataModuleTest(pl.LightningDataModule):
             self.summary_max_token_len
         )
 
-    def test_dataloader(self):
+    def predict_dataloader(self):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
