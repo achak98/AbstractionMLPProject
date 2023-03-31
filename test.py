@@ -214,7 +214,7 @@ class NewsSummaryModel(pl.LightningModule):
             labels=labels,
             decoder_attention_mask=decoder_attention_mask
         )
-        print(output.keys())
+        
         text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
         input_ids = tokenizer.encode(text, return_tensors='pt')
         outputs = trained_model.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
@@ -226,7 +226,55 @@ class NewsSummaryModel(pl.LightningModule):
         last_layer_attention_cross = output['cross_attentions'][-1]
         last_layer_attention_enc = output['encoder_attentions'][-1]
         last_layer_attention_dec = output['decoder_attentions'][-1]
-        summary_attention = last_layer_attention[:, :, -len(summary_input_ids[0]):, :]
+        summary_attention_cross = last_layer_attention_cross[:, :, -len(summary_input_ids[0]):, :]
+        summary_attention_enc = last_layer_attention_enc[:, :, -len(summary_input_ids[0]):, :]
+        summary_attention_dec = last_layer_attention_dec[:, :, -len(summary_input_ids[0]):, :]
+
+        # Sum the attention scores across the heads and normalize them
+        summary_attention_cross = summary_attention_cross.sum(dim=1, keepdim =True)
+        summary_attention_cross /= summary_attention_cross.sum(dim=-1, keepdim=True)
+# Sum the attention scores across the heads and normalize them
+        summary_attention_enc = summary_attention_enc.sum(dim=1, keepdim =True)
+        summary_attention_enc /= summary_attention_enc.sum(dim=-1, keepdim=True)
+# Sum the attention scores across the heads and normalize them
+        summary_attention_dec = summary_attention_dec.sum(dim=1, keepdim =True)
+        summary_attention_dec /= summary_attention_dec.sum(dim=-1, keepdim=True)
+
+        # Convert the attention scores to a numpy array
+        summary_attention_cross = summary_attention_cross.detach().cpu().numpy()
+        summary_attention_enc = summary_attention_enc.detach().cpu().numpy()
+        summary_attention_dec = summary_attention_dec.detach().cpu().numpy()
+        
+
+        sns.set(style='whitegrid', font_scale=1)
+        rcParams['figure.figsize'] = 80, 40
+        rc('font')
+        summary_attention_cross = summary_attention_cross.squeeze(0)
+        summary_attention_enc = summary_attention_enc.squeeze(0)
+        summary_attention_dec = summary_attention_dec.squeeze(0)
+        x = [tokenizer.decode(token) for token in text_input_ids[0]]
+        y = [tokenizer.decode(token) for token in summary_input_ids[0]]
+        
+        sns.set(font_scale=2.1)
+        ax = sns.heatmap(summary_attention_cross[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
+        
+        ax.set_xticklabels(x, rotation=90, fontsize=40)
+        ax.set_yticklabels(y, rotation=0, fontsize=40)
+        ax.set_xticks(np.arange(len(x))+0.5)
+        ax.set_yticks(np.arange(len(y))+0.5)
+        #ax.set_yticklabels([''])
+        ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
+        ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
+        ax.set_xlabel('Output Tokens', fontsize=60, fontweight='bold')
+        ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
+        #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
+        plt.savefig('baseline/heatmap_cross.pdf', format='pdf', dpi=300, bbox_inches='tight')
+        ax = sns.heatmap(summary_attention_enc[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
+        plt.savefig('baseline/heatmap_enc.pdf', format='pdf', dpi=300, bbox_inches='tight')
+        ax = sns.heatmap(summary_attention_dec[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
+        # Save the plot in a pdf file
+        plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
+
 
         return output.loss, output.logits
 
