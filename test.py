@@ -40,6 +40,60 @@ FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
 
 predicted = []
+
+class NewsSummaryDataset(Dataset):
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        tokenizer: T5Tokenizer,
+        text_max_token_len: int = 1024,
+        summary_max_token_len: int = 128
+    ):
+        self.tokenizer = tokenizer
+        self.data = data
+        self.text_max_token_len = text_max_token_len
+        self.summary_max_token_len = summary_max_token_len
+    
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index: int):
+        data_row = self.data.iloc[index]
+
+        text = data_row['article']
+
+        text_encoding = tokenizer(
+            text,
+            max_length=self.text_max_token_len,
+            padding='max_length',
+            truncation=True,
+            return_attention_mask=True,
+            add_special_tokens=True,
+            return_tensors='pt'
+        )
+
+        summary_encoding = tokenizer(
+            data_row['highlights'],
+            max_length=self.summary_max_token_len,
+            padding='max_length',
+            truncation=True,
+            return_attention_mask=True,
+            add_special_tokens=True,
+            return_tensors='pt'
+        )
+
+        labels = summary_encoding['input_ids']
+        labels[labels == 0] = -100 # to make sure we have correct labels for T5 text generation
+
+        return dict(
+            text=text,
+            summary=data_row['highlights'],
+            text_input_ids=text_encoding['input_ids'].flatten(),
+            text_attention_mask=text_encoding['attention_mask'].flatten(),
+            labels=labels.flatten(),
+            labels_attention_mask=summary_encoding['attention_mask'].flatten()
+        )
+        
 class NewsSummaryDataModule(pl.LightningDataModule):
     def __init__(
         self,
