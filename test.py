@@ -274,21 +274,21 @@ class NewsSummaryModel(pl.LightningModule):
         return loss
 
     def predict_step(self, batch, batch_size):
-        print(batch.keys())
-        input_ids = batch['text_input_ids']
-        attention_mask = batch['text_attention_mask']
-        labels = batch['labels']
-        labels_attention_mask = batch['labels_attention_mask']
-        self.batch_size = batch_size
-        m = self(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            decoder_attention_mask=labels_attention_mask,
-            labels=labels
-            #batch_size=batch_size
+        generated_ids = trained_model.model.generate(
+            input_ids=batch['text_input_ids'],
+            attention_mask=batch['text_attention_mask'],
+            max_length=150,
+            num_beams=2,
+            repetition_penalty=2.5,
+            length_penalty=1.0,
+            early_stopping=True
         )
-        print(m)
-        return 1
+        preds = [
+                tokenizer.decode(gen_id, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+                for gen_id in generated_ids['sequences']
+        ]
+        return "".join(preds)
+
 
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
