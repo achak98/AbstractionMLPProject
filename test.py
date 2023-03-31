@@ -235,6 +235,8 @@ class NewsSummaryModel(pl.LightningModule):
         summary_attention_cross = summary_attention_cross.sum(dim=1, keepdim =True)
         summary_attention_cross /= summary_attention_cross.sum(dim=-1, keepdim=True)
         print("summary_attention_cross: ", summary_attention_cross)
+        print("summary_attention_enc: ", summary_attention_enc)
+        print("summary_attention_dec: ", summary_attention_dec)
 # Sum the attention scores across the heads and normalize them
         summary_attention_enc = summary_attention_enc.sum(dim=1, keepdim =True)
         summary_attention_enc /= summary_attention_enc.sum(dim=-1, keepdim=True)
@@ -271,7 +273,7 @@ class NewsSummaryModel(pl.LightningModule):
         #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
         plt.savefig('baseline/heatmap_cross.pdf', format='pdf', dpi=300, bbox_inches='tight')
         print("cross done")
-        """
+        
         sns.set(style='whitegrid', font_scale=1)
         rcParams['figure.figsize'] = 80, 40
         rc('font')
@@ -322,7 +324,9 @@ class NewsSummaryModel(pl.LightningModule):
         # Save the plot in a pdf file
         plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
         print("dec done")
-        """
+        
+        if(summary_attention_enc[0][0][0][0] > 0):
+            exit()
         
         return output.loss, output.logits
 
