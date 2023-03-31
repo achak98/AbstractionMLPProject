@@ -249,84 +249,83 @@ class NewsSummaryModel(pl.LightningModule):
         summary_attention_enc = summary_attention_enc.detach().cpu().numpy()
         summary_attention_dec = summary_attention_dec.detach().cpu().numpy()
         
-
-        sns.set(style='whitegrid', font_scale=1)
-        rcParams['figure.figsize'] = 80, 40
-        rc('font')
-        summary_attention_cross = summary_attention_cross.squeeze(0)
         
-        x = [tokenizer.decode(token) for token in text_input_ids[0]]
-        y = [tokenizer.decode(token) for token in summary_input_ids[0]]
-        
-        sns.set(font_scale=2.1)
-        ax = sns.heatmap(summary_attention_cross[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
-        
-        ax.set_xticklabels(x, rotation=90, fontsize=40)
-        ax.set_yticklabels(y, rotation=0, fontsize=40)
-        ax.set_xticks(np.arange(len(x))+0.5)
-        ax.set_yticks(np.arange(len(y))+0.5)
-        #ax.set_yticklabels([''])
-        ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
-        ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
-        ax.set_xlabel('Output Tokens', fontsize=60, fontweight='bold')
-        ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
-        #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
-        plt.savefig('baseline/heatmap_cross.pdf', format='pdf', dpi=300, bbox_inches='tight')
-        print("cross done")
-        
-        sns.set(style='whitegrid', font_scale=1)
-        rcParams['figure.figsize'] = 80, 40
-        rc('font')
-        summary_attention_enc = summary_attention_enc.squeeze(0)
-        
-        x = [tokenizer.decode(token) for token in text_input_ids[0]]
-        y = [tokenizer.decode(token) for token in summary_input_ids[0]]
-        
-        sns.set(font_scale=2.1)
-        ax = sns.heatmap(summary_attention_enc[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
-        
-        ax.set_xticklabels(x, rotation=90, fontsize=40)
-        ax.set_yticklabels(y, rotation=0, fontsize=40)
-        ax.set_xticks(np.arange(len(x))+0.5)
-        ax.set_yticks(np.arange(len(y))+0.5)
-        #ax.set_yticklabels([''])
-        ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
-        ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
-        ax.set_xlabel('Output Tokens', fontsize=60, fontweight='bold')
-        ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
-        
-        plt.savefig('baseline/heatmap_enc.pdf', format='pdf', dpi=300, bbox_inches='tight')
-        print("enc done")
-        
-        
-        sns.set(style='whitegrid', font_scale=1)
-        rcParams['figure.figsize'] = 80, 40
-        rc('font')
-        summary_attention_dec = summary_attention_dec.squeeze(0)
-        
-        x = [tokenizer.decode(token) for token in text_input_ids[0]]
-        y = [tokenizer.decode(token) for token in summary_input_ids[0]]
-        
-        sns.set(font_scale=2.1)
-        ax = sns.heatmap(summary_attention_dec[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
-        
-        ax.set_xticklabels(x, rotation=90, fontsize=40)
-        ax.set_yticklabels(y, rotation=0, fontsize=40)
-        ax.set_xticks(np.arange(len(x))+0.5)
-        ax.set_yticks(np.arange(len(y))+0.5)
-        #ax.set_yticklabels([''])
-        ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
-        ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
-        ax.set_xlabel('Output Tokens', fontsize=60, fontweight='bold')
-        ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
-        
-        
-        # Save the plot in a pdf file
-        plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
-        print("dec done")
+        if(summary_attention_cross[0][0][0] > 0):
+            sns.set(style='whitegrid', font_scale=1)
+            rcParams['figure.figsize'] = 80, 40
+            rc('font')
+            summary_attention_cross = summary_attention_cross.squeeze(0)
+            
+            x = [tokenizer.decode(token) for token in text_input_ids[0]]
+            y = [tokenizer.decode(token) for token in summary_input_ids[0]]
+            
+            sns.set(font_scale=2.1)
+            ax = sns.heatmap(summary_attention_cross[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
+            
+            ax.set_xticklabels(x, rotation=90, fontsize=40)
+            ax.set_yticklabels(y, rotation=0, fontsize=40)
+            ax.set_xticks(np.arange(len(x))+0.5)
+            ax.set_yticks(np.arange(len(y))+0.5)
+            #ax.set_yticklabels([''])
+            ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
+            ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
+            ax.set_xlabel('Output Tokens', fontsize=60, fontweight='bold')
+            ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
+            #ax.set_title('Attention Heatmap', fontsize=40, fontweight='bold')
+            plt.savefig('baseline/heatmap_cross.pdf', format='pdf', dpi=300, bbox_inches='tight')
+            print("cross done")
         
         if(summary_attention_enc[0][0][0] > 0):
-            exit()
+            sns.set(style='whitegrid', font_scale=1)
+            rcParams['figure.figsize'] = 80, 40
+            rc('font')
+            summary_attention_enc = summary_attention_enc.squeeze(0)
+            
+            x = [tokenizer.decode(token) for token in text_input_ids[0]]
+            y = [tokenizer.decode(token) for token in summary_input_ids[0]]
+            
+            sns.set(font_scale=2.1)
+            ax = sns.heatmap(summary_attention_enc[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
+            
+            ax.set_xticklabels(x, rotation=90, fontsize=40)
+            ax.set_yticklabels(y, rotation=0, fontsize=40)
+            ax.set_xticks(np.arange(len(x))+0.5)
+            ax.set_yticks(np.arange(len(y))+0.5)
+            #ax.set_yticklabels([''])
+            ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
+            ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
+            ax.set_xlabel('Output Tokens', fontsize=60, fontweight='bold')
+            ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
+            
+            plt.savefig('baseline/heatmap_enc.pdf', format='pdf', dpi=300, bbox_inches='tight')
+            print("enc done")
+        
+        if(summary_attention_dec[0][0][0] > 0):
+            sns.set(style='whitegrid', font_scale=1)
+            rcParams['figure.figsize'] = 80, 40
+            rc('font')
+            summary_attention_dec = summary_attention_dec.squeeze(0)
+            
+            x = [tokenizer.decode(token) for token in text_input_ids[0]]
+            y = [tokenizer.decode(token) for token in summary_input_ids[0]]
+            
+            sns.set(font_scale=2.1)
+            ax = sns.heatmap(summary_attention_dec[0], cmap='Spectral_r', annot=True, fmt='.1f', cbar=False)
+            
+            ax.set_xticklabels(x, rotation=90, fontsize=40)
+            ax.set_yticklabels(y, rotation=0, fontsize=40)
+            ax.set_xticks(np.arange(len(x))+0.5)
+            ax.set_yticks(np.arange(len(y))+0.5)
+            #ax.set_yticklabels([''])
+            ax.set_xlabel('Input Tokens', fontsize=60, fontweight='bold')
+            ax.set_ylabel('Output Tokens', fontsize=60, fontweight='bold')
+            ax.set_xlabel('Output Tokens', fontsize=60, fontweight='bold')
+            ax.set_ylabel('Input Tokens', fontsize=60, fontweight='bold')
+            
+            
+            # Save the plot in a pdf file
+            plt.savefig('baseline/heatmap_dec.pdf', format='pdf', dpi=300, bbox_inches='tight')
+            print("dec done")
         
         return output.loss, output.logits
 
