@@ -192,11 +192,11 @@ class NewsSummaryModel(pl.LightningModule):
         print("input sequences length: ",len(text_input_ids[0]))
         print("output sequences length: ",len(summary_input_ids[0]))
         summary_attention_average = np.zeros((1, 1, len(summary_input_ids[0]),len(text_input_ids[0])))
-        print("no of gen tokens: ", len(output['cross_attentions']))
+        print("no of gen tokens: ", len(output['decoder_attentions']))
         
         count = 0
-        for tuple_gen_token in tqdm(output['cross_attentions'], desc = 'Processing Attention heatmap'):
-            print("no of decoder layers: ", len(output['cross_attentions'][count]))
+        for tuple_gen_token in tqdm(output['decoder_attentions'], desc = 'Processing Attention heatmap'):
+            print("no of decoder layers: ", len(output['decoder_attentions'][count]))
             count+=1
             for decoder_layer_tuple_gen_token in tuple_gen_token:
 
