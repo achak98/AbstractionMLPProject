@@ -39,6 +39,7 @@ MODEL_NAME = 't5-small'
 FT_MODEL_NAME = 'Alred/t5-small-finetuned-summarization-cnn'
 tokenizer = AutoTokenizer.from_pretrained(FT_MODEL_NAME, max_length=1024, truncation = True, padding='max_length')
 
+predicted = []
 class NewsSummaryDataModule(pl.LightningDataModule):
     def __init__(
         self,
@@ -164,7 +165,9 @@ class NewsSummaryModel(pl.LightningModule):
         labels = batch['labels']
         labels_attention_mask = batch['labels_attention_mask']
         self.batch_size = batch_size
-        print(tokenizer.decode(outputs[0]))
+        prediction = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
+        print(prediction)
+        predicted..append(prediction)
         loss, outputs = self(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -277,15 +280,19 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     count = 0
     score_log1 = tqdm(total=0, position=1, bar_format='{desc}')
-
-    
+    target = []
+    for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing target'):
+        target.append(df_test_trimmed['highlights'].iloc[itr])
+    rouge_scores = rouge.get_scores(predicted, target)
+    print(rouge_scores)
+    """
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Processing Rouge scores'):
         stuff = df_test_trimmed['article'].iloc[itr]
         what_stuffs_supposed_to_be = df_test_trimmed['highlights'].iloc[itr]
         count+=1
         model_summary = summarizeText(trained_model, stuff)
         rouge_scores = rouge.get_scores(model_summary, what_stuffs_supposed_to_be)
-        """
+        """"""
         splitted_highlights = what_stuffs_supposed_to_be.split()
         splitted_inference = model_summary.split()
         bleu_scores[0] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (1,0,0,0)) - bleu_scores[0])/count
@@ -293,7 +300,7 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
         bleu_scores[2] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,1,0)) - bleu_scores[2])/count
         bleu_scores[3] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0,0,0,1)) - bleu_scores[3])/count
         bleu_scores[4] += (sentence_bleu(splitted_highlights, splitted_inference, weights = (0.25,0.25,0.25,0.25)) - bleu_scores[4])/count
-       """
+       """"""
         rouge_scores = rouge_scores[0]
         ROUGE_SCORE_RUNNING_AVG[0][0] += (rouge_scores["rouge-1"]["f"] - ROUGE_SCORE_RUNNING_AVG[0][0])/count
         ROUGE_SCORE_RUNNING_AVG[0][1] += (rouge_scores["rouge-1"]["p"] - ROUGE_SCORE_RUNNING_AVG[0][1])/count
@@ -308,7 +315,7 @@ def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
         score_log1.set_description_str("Rouge-1 Scores: f: {f1:4f}, p: {p1:4f}, r: {r1:4f} || Rouge-2 Scores: f: {f2:4f}, p: {p2:4f}, r: {r2:4f} || Rouge-L Scores: f: {f3:4f}, p: {p3:4f}, r: {r3:4f}".format(f1 = ROUGE_SCORE_RUNNING_AVG[0][0], p1 = ROUGE_SCORE_RUNNING_AVG[0][1], r1 = ROUGE_SCORE_RUNNING_AVG[0][2], f2 = ROUGE_SCORE_RUNNING_AVG[1][0], p2 = ROUGE_SCORE_RUNNING_AVG[1][1], r2 = ROUGE_SCORE_RUNNING_AVG[1][2], f3 = ROUGE_SCORE_RUNNING_AVG[2][0], p3 = ROUGE_SCORE_RUNNING_AVG[2][1], r3 = ROUGE_SCORE_RUNNING_AVG[2][2]))
         #score_log4.set_description_str("BLEU scores:: individual 1-gram : {b1:4f}, individual 2-gram : {b2:4f}, individual 3-gram : {b3:4f}, individual 4-gram : {b4:4f}, cumulative 4-gram : {b5:4f}".format(
 #b1 = bleu_scores[0], b2 = bleu_scores[1], b3 = bleu_scores[2], b4 = bleu_scores[3], b5 = bleu_scores[4]))
-
+"""
 def remove_stopwords_wrapper(df_test_trimmed, df_train_trimmed, df_validation_trimmed):
     print("starting stop word removal")
     for itr in tqdm(range (0, len(df_test_trimmed)), desc = 'Removing stopwords in test data'):
@@ -417,13 +424,12 @@ def main():
     #trained_model.generate_attention_map(text_input_ids, summary_input_ids, text, model_summary)
     trainer = pl.Trainer(
         logger=logger,
-        callbacks=[checkpoint_callback],
         max_epochs=N_EPOCHS,
         accelerator = 'gpu',
         devices = 2
     )
     trainer.test(model=trained_model, dataloaders=data_module)
-    #get_rouge_and_bleu_scores(trained_model, df_test_trimmed)
+    get_rouge_and_bleu_scores(df_test_trimmed)
     
 if __name__ == "__main__":
         main()
