@@ -175,7 +175,7 @@ class NewsSummaryModel(pl.LightningModule):
             decoder_attention_mask=decoder_attention_mask
         )
         
-        print(output.keys())
+        print(output['cross_attentions'][-1].size())
 
         return output.loss, output.logits
 
@@ -329,7 +329,7 @@ def summarizeText(trained_model, text):
     ]
     return "".join(preds)
 
-def get_rouge_and_bleu_scores (trained_model, df_test_trimmed):
+def get_rouge_and_bleu_scores (df_test_trimmed):
     rouge = Rouge()
     ROUGE_SCORE_RUNNING_AVG = np.zeros((3, 3), dtype=float) #i -> R1 R2 R3 j -> f p r
     count = 0
