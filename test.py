@@ -192,39 +192,36 @@ class NewsSummaryModel(pl.LightningModule):
         print("input sequences length: ",len(text_input_ids[0]))
         print("output sequences length: ",len(summary_input_ids[0]))
         summary_attention_average = np.zeros((1, 1, len(summary_input_ids[0]),len(text_input_ids[0])))
-        print("no of gen tokens: ", len(output['decoder_attentions']))
-        
+        print("no of gen tokens: ", len(output['cross_attentions']))
+        print("no of decoder layers: ", len(output['cross_attentions'][0]))
         count = 0
-        for tuple_gen_token in tqdm(output['decoder_attentions'], desc = 'Processing Attention heatmap'):
-            print("no of decoder layers: ", len(output['decoder_attentions'][count]))
+        for tuple_gen_token in tqdm(output['cross_attentions'], desc = 'Processing Attention heatmap'):
             count+=1
-            for decoder_layer_tuple_gen_token in tuple_gen_token:
-
-                print("float tensor shape for iteration {} : {}".format(count, (tuple_gen_token[-1].size())))
-                # Get the attention scores from the last layer of the decoder
-                last_layer_attention = tuple_gen_token[-1] #(batch_size, num_heads, generated_length, sequence_length).
-                
-                # Reshape the attention scores to match the output shape
-                #last_layer_attention = torch.stack(list(last_layer_attention), dim=0)
-                #last_layer_attention = last_layer_attention.squeeze(0)
-                #last_layer_attention = last_layer_attention.view(
-            #        output['sequences'].size(0),
-            #        self.model.config.num_heads,
-            #        -1,
-            #        output['sequences'].size(-1)
-            #    )
-                # Compute the attention scores for the summary tokens
-                summary_attention = last_layer_attention[:, :, -len(summary_input_ids[0]):, :]
-
-                # Sum the attention scores across the heads and normalize them
-                summary_attention = summary_attention.sum(dim=1, keepdim =True)
-                summary_attention /= summary_attention.sum(dim=-1, keepdim=True)
+            print("float tensor shape for iteration {} : {}".format(count, (tuple_gen_token[-1].size())))
+            # Get the attention scores from the last layer of the decoder
+            last_layer_attention = tuple_gen_token[-1] #(batch_size, num_heads, generated_length, sequence_length).
             
-                # Convert the attention scores to a numpy array
-                summary_attention = summary_attention.detach().cpu().numpy()
-                
-                for j in range (len(summary_attention[0][0][0])):
-                    summary_attention_average[0][0][count][j] += summary_attention[0][0][0][j]
+            # Reshape the attention scores to match the output shape
+            #last_layer_attention = torch.stack(list(last_layer_attention), dim=0)
+            #last_layer_attention = last_layer_attention.squeeze(0)
+            #last_layer_attention = last_layer_attention.view(
+        #        output['sequences'].size(0),
+        #        self.model.config.num_heads,
+        #        -1,
+        #        output['sequences'].size(-1)
+        #    )
+            # Compute the attention scores for the summary tokens
+            summary_attention = last_layer_attention[:, :, -len(summary_input_ids[0]):, :]
+
+            # Sum the attention scores across the heads and normalize them
+            summary_attention = summary_attention.sum(dim=1, keepdim =True)
+            summary_attention /= summary_attention.sum(dim=-1, keepdim=True)
+        
+            # Convert the attention scores to a numpy array
+            summary_attention = summary_attention.detach().cpu().numpy()
+            
+            for j in range (len(summary_attention[0][0][0])):
+                summary_attention_average[0][0][count][j] += summary_attention[0][0][0][j]
             
             
             
