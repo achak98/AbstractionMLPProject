@@ -213,7 +213,7 @@ class NewsSummaryModel(pl.LightningModule):
         
             # Convert the attention scores to a numpy array
             summary_attention = summary_attention.detach().cpu().numpy()
-            for i in range (len(summary_attention[0][0]))
+            for i in range (len(summary_attention[0][0])):
                 summary_attention_average[0][0][i] += summary_attention[0][0][i]
             
             
