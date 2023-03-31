@@ -500,8 +500,9 @@ def main():
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv', encoding = "latin-1")
     
     df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
-    df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
-    df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
+    df_test_trimmed = df_test_trimmed[:4000]
+    #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
+    #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
     
 
     #data_module = NewsSummaryDataModule(df_train_trimmed, df_test_trimmed, df_validation_trimmed, tokenizer = tokenizer, batch_size = BATCH_SIZE)
@@ -527,7 +528,7 @@ def main():
         logger=logger,
         max_epochs=N_EPOCHS,
         accelerator = 'gpu',
-        devices = 2
+        devices = 1
     )
     
     prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
