@@ -234,6 +234,7 @@ class NewsSummaryModel(pl.LightningModule):
         # Sum the attention scores across the heads and normalize them
         summary_attention_cross = summary_attention_cross.sum(dim=1, keepdim =True)
         summary_attention_cross /= summary_attention_cross.sum(dim=-1, keepdim=True)
+        print("summary_attention_cross: ", summary_attention_cross)
 # Sum the attention scores across the heads and normalize them
         summary_attention_enc = summary_attention_enc.sum(dim=1, keepdim =True)
         summary_attention_enc /= summary_attention_enc.sum(dim=-1, keepdim=True)
@@ -652,7 +653,7 @@ def main():
         devices = 1
     )
     
-    prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
+    #prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
     #print("prediction: ", prediction)
     #get_rouge_and_bleu_scores(prediction, df_test_trimmed)
     df_train_trimmed['article'].iloc[0] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
