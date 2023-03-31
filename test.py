@@ -490,8 +490,7 @@ def main():
         devices = 2
     )
     
-    prediction = trained_model(data_module.tra)
-    get_rouge_and_bleu_scores(prediction, df_test_trimmed)
+    trainer.test(model=trained_model, dataloaders=data_module)
     
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
