@@ -228,7 +228,7 @@ class NewsSummaryModel(pl.LightningModule):
             #batch_size=batch_size
         )
         
-        prediction = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
+        prediction = tokenizer.decode(outputs['sequences'], skip_special_tokens=True)
         print(prediction)
         predicted.append(prediction)
 
