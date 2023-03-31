@@ -285,6 +285,19 @@ class NewsSummaryModel(pl.LightningModule):
         return loss
 
     def predict_step(self, batch, batch_size):
+        input_ids = batch['text_input_ids']
+        attention_mask = batch['text_attention_mask']
+        labels = batch['labels']
+        labels_attention_mask = batch['labels_attention_mask']
+        self.batch_size = batch_size
+
+        loss, outputs = self(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            decoder_attention_mask=labels_attention_mask,
+            labels=labels
+            #batch_size=batch_size
+        )
         generated_ids = self.model.generate(
             input_ids=batch['text_input_ids'],
             attention_mask=batch['text_attention_mask'],
