@@ -622,7 +622,7 @@ def main():
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_no_stem.csv', encoding = "latin-1")
     
     #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_preproc_stem.csv', encoding = "latin-1")
-    df_test_trimmed = df_test_trimmed[:1]
+    df_test_trimmed = df_test_trimmed[:10]
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_preproc_stem.csv', encoding = "latin-1")
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_preproc_stem.csv', encoding = "latin-1")
     
@@ -656,8 +656,9 @@ def main():
     #prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
     #print("prediction: ", prediction)
     #get_rouge_and_bleu_scores(prediction, df_test_trimmed)
-    df_train_trimmed['article'].iloc[0] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
-    df_train_trimmed['highlights'].iloc[0] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents. Extractive and abstractive summarisation involves selecting key sentences from the original document."
+    for i in range (10):
+        df_train_trimmed['article'].iloc[i] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
+        df_train_trimmed['highlights'].iloc[i] = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents. Extractive and abstractive summarisation involves selecting key sentences from the original document."
     prediction = trainer.test(model=trained_model, datamodule=data_module)
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
