@@ -489,7 +489,7 @@ def main():
     df_test_trimmed = df_test[['article', 'highlights']]
     df_validation_trimmed = df_validation[['article', 'highlights']]
     
-    df_test_trimmed = df_test_trimmed[:3]
+
     #df_test_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/test_stopwords.csv', encoding = "latin-1")
     #df_train_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/train_stopwords.csv', encoding = "latin-1")
     #df_validation_trimmed = pd.read_csv('CNN DailyMail Summarisation Data/validation_stopwords.csv', encoding = "latin-1")
@@ -526,7 +526,7 @@ def main():
         logger=logger,
         max_epochs=N_EPOCHS,
         accelerator = 'gpu',
-        devices = 1
+        devices = 2
     )
     
     prediction = trainer.predict(model=trained_model, datamodule=data_module, return_predictions=True)
