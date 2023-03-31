@@ -188,7 +188,7 @@ class NewsSummaryModel(pl.LightningModule):
 	        input_ids=text_input_ids,
 	        attention_mask=(text_input_ids != tokenizer.pad_token_id),
 	    )
-
+        print("output's class: ", type(output).__name__)
         
         summary_attention_average = np.zeros((1, 1, len(summary_input_ids[0]),len(text_input_ids[0])))
         print("no of gen tokens: ", len(output['cross_attentions']))
@@ -221,6 +221,7 @@ class NewsSummaryModel(pl.LightningModule):
             
             for j in range (len(summary_attention[0][0][0])):
                 summary_attention_average[0][0][count][j] += summary_attention[0][0][0][j]
+            
             
             
 	    # Plot the heatmap
@@ -396,11 +397,11 @@ def main():
     text = "Automatic text summarisation aims to produce a brief but comprehensive version of one or multiple documents, highlighting the most important information. There are two main summarisation techniques: extractive and abstractive. Extractive summarisation involves selecting key sentences from the original document, while abstractive summarisation involves creating new language based on the important information and requires a deeper understanding of the content."
 
     input_ids = tokenizer.encode(text, return_tensors='pt')
-    print("trained model type: ", type(trained_model).__name__)
-    print("trained_model.mode. type: ", type(trained_model.model).__name__)
+    
+    
     outputs = trained_model.model.generate(input_ids=input_ids, max_length=100, num_beams=4, early_stopping=True)
     print("output: ",outputs.keys())
-    print("output output type: ", type(outputs).__name__)
+    
     print("output seq shape: ", outputs['sequences'].size())
     model_summary = tokenizer.decode(outputs['sequences'][0], skip_special_tokens=True)
 
@@ -414,7 +415,7 @@ def main():
 
     trained_model.generate_attention_map(text_input_ids, summary_input_ids, text, model_summary)
 
-    get_rouge_and_bleu_scores(trained_model, df_test_trimmed)
+    #get_rouge_and_bleu_scores(trained_model, df_test_trimmed)
     
 if __name__ == "__main__":
         main()
